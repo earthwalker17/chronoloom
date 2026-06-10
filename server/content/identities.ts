@@ -1,0 +1,133 @@
+import type { IdentityId } from "@shared/constants";
+import type { IdentityDef } from "./contentTypes";
+
+export const IDENTITIES: Record<IdentityId, IdentityDef> = {
+  scholar: {
+    id: "scholar",
+    nameZh: "寒门书生",
+    glyphZh: "书",
+    cardLineZh: "进京应试，盘缠将尽，一首好诗便可改命。",
+    defaultNameZh: "陆云津",
+    age: 22,
+    openingHookZh:
+      "你从江南一路北上，落脚在沈记书肆的偏房。春闱还有一个多月，囊中的钱却只够撑到上元之后。沈先生说，灯节诗会上若能让贵人记住你的名字，长安的门才算开了一条缝。",
+    start: {
+      location: "bookshop",
+      money: 800,
+      health: 85,
+      reputation: 5,
+      skills: { letters: 3, etiquette: 2, streetwise: 1 },
+      accessTags: ["scholar_circle"],
+      statuses: [],
+    },
+    npcPriors: {
+      shen_yanqiu: { trust: 25, noteZh: "亦师亦友，许你住在书肆偏房" },
+      cui_jiu: { trust: -10, noteZh: "曾在酒肆口角，他记仇" },
+      lvyao: { trust: 0, noteZh: "只闻其琵琶，未曾深谈" },
+      pei_heng: { trust: 0, noteZh: "素未谋面的市丞" },
+      he_shisan: { trust: 0, noteZh: "赊过一回酒钱" },
+    },
+    tensionBias: { festival_fervor: 1 },
+    forbiddenZh: [
+      "科举春闱在二月之后，灯节期间不可能开科取士，也不可能凭空得官身。",
+      "书生无官身，见市丞需自称'学生'，不可与官府平起平坐。",
+    ],
+    goalSeedsZh: ["得贵人赏识，举荐入幕", "诗名传于士林", "撑到来春登第"],
+  },
+  apprentice: {
+    id: "apprentice",
+    nameZh: "绢行学徒",
+    glyphZh: "商",
+    cardLineZh: "替东家看摊，账上短了一页，嫌疑落在你头上。",
+    defaultNameZh: "张小乙",
+    age: 17,
+    openingHookZh:
+      "你在崔家绢行当了五年学徒，眼看明年就能出师。偏偏灯节前盘账，账册少了一页——那一页记的正是你经手的几笔货。崔九在东家面前似笑非笑地提了你的名字。",
+    start: {
+      location: "silk_row",
+      money: 300,
+      health: 90,
+      reputation: 0,
+      skills: { bargaining: 2, streetwise: 2, letters: 1 },
+      accessTags: ["guild_floor"],
+      statuses: ["in_debt"],
+    },
+    npcPriors: {
+      shen_yanqiu: { trust: 0, noteZh: "买过两回旧书" },
+      cui_jiu: { trust: -20, noteZh: "同行死敌，处处压你一头" },
+      lvyao: { trust: 5, noteZh: "同是寄人篱下，偶有照应" },
+      pei_heng: { trust: 0, noteZh: "查账的市丞，避之不及" },
+      he_shisan: { trust: 10, noteZh: "她说你像她早亡的弟弟" },
+    },
+    tensionBias: { guild_dispute: 2 },
+    forbiddenZh: [
+      "学徒身契未满，擅自离行或顶撞东家会被行会除名，断了生路。",
+      "你识字不多，写不了长文书，看账尚可。",
+    ],
+    goalSeedsZh: ["洗清失账的嫌疑", "攒钱还清债，提前出师", "在行会里挣下自己的名号"],
+  },
+  interpreter: {
+    id: "interpreter",
+    nameZh: "译语人",
+    glyphZh: "译",
+    cardLineZh: "胡汉之间讨生活，消息比绢帛值钱。",
+    defaultNameZh: "安四郎",
+    age: 26,
+    openingHookZh:
+      "你祖上是昭武九姓的胡商，长安生长安大，两边的话都说得地道。灯节前，波斯邸的一笔大货款出了纠纷，偏偏经手的契书是你译的。胡商急着要说法，市署的人也开始打听你。",
+    start: {
+      location: "persian_lodge",
+      money: 1200,
+      health: 88,
+      reputation: 0,
+      skills: { tongues: 3, bargaining: 2, streetwise: 1 },
+      accessTags: ["caravan_court"],
+      statuses: [],
+    },
+    npcPriors: {
+      shen_yanqiu: { trust: 0, noteZh: "他不大瞧得上市侩之人" },
+      cui_jiu: { trust: 0, noteZh: "绢行与胡商素有生意" },
+      lvyao: { trust: 5, noteZh: "你懂她唱词里的西域口音" },
+      pei_heng: { trust: -5, noteZh: "官府对译语人素有连坐之疑" },
+      he_shisan: { trust: 15, noteZh: "多年老主顾，互通消息" },
+    },
+    tensionBias: { official_scrutiny: 2 },
+    forbiddenZh: [
+      "译语人无官凭不得代官府传话，伪传官命是重罪。",
+      "胡商重信义，一旦失信于邸店，整个西市东市都不会再用你。",
+    ],
+    goalSeedsZh: ["了结货款纠纷，保住信义", "攒一笔本钱自立门户", "在官府与胡商之间立稳脚跟"],
+  },
+  copyist: {
+    id: "copyist",
+    nameZh: "抄经生",
+    glyphZh: "经",
+    cardLineZh: "笔下安稳，心却不安；寺院之外灯火正盛。",
+    defaultNameZh: "卫澄心",
+    age: 19,
+    openingHookZh:
+      "你在兴善寺别院抄了三年经，一笔小楷端正得让监院都点头。灯节法会将近，寺里抄经的酬金涨了，墙外的灯市也亮了。有人捎话来：有一页要紧的'账'，想夹在经卷里藏进寺中——酬金是你抄一年经也挣不来的数。",
+    start: {
+      location: "temple_hall",
+      money: 100,
+      health: 80,
+      reputation: 5,
+      skills: { letters: 3, etiquette: 2 },
+      accessTags: ["temple_inner"],
+      statuses: [],
+    },
+    npcPriors: {
+      shen_yanqiu: { trust: 10, noteZh: "他常来寺里求字，夸过你的小楷" },
+      cui_jiu: { trust: 0, noteZh: "素不相识" },
+      lvyao: { trust: 0, noteZh: "隔墙听过她的琵琶" },
+      pei_heng: { trust: 5, noteZh: "他敬重寺院的体面" },
+      he_shisan: { trust: 0, noteZh: "你从不进酒肆" },
+    },
+    tensionBias: { festival_fervor: 1 },
+    forbiddenZh: [
+      "你未受戒，是寺中雇的俗家抄经生，但败坏寺院清誉会被逐出，再无人敢用。",
+      "你身无长物，拿不出大钱打点任何人。",
+    ],
+    goalSeedsZh: ["守住这双写字的手和一身清白", "攒钱为母亲延医", "或许，看一眼墙外的人间灯火"],
+  },
+};
