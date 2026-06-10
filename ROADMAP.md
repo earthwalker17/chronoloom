@@ -43,7 +43,34 @@ Everything is new this session. Key paths: `shared/{constants,schemas,types}.ts`
 - v1.1 candidates: SSE turn streaming, WebAudio ambience, free-text actions via actionTag schema, identity-specific scripted variants for turns 5/9.
 
 ### Next Steps (recommended)
-1. Put a working `ANTHROPIC_API_KEY` in `.env` → `npm run test:live` → full live browser playthrough; tune prose length/latency via DIRECTOR_RULES and per-turn `effort`.
+1. ~~Put a working `ANTHROPIC_API_KEY` in `.env` → `npm run test:live` → full live browser playthrough~~ — done 2026-06-11, see next entry.
 2. Play-test all four identities end-to-end in the browser; tighten any scripted copy that reads flat.
 3. Share-card polish (richer Canvas composition, QR/link).
 4. Deployment path (the server already serves `dist/client`; needs only a Node host + env vars).
+
+## Task Log: 2026-06-11 — Live engine verified · proxy + grammar fixes · ARCHITECTURE.md · GitHub push
+
+### Goal
+Unblock and verify the live Claude engine end-to-end with the user's working API key; add ARCHITECTURE.md as the standing onboarding document and a CLAUDE.md rule to keep it updated; publish the repo to GitHub.
+
+### Changes Made
+- **Proxy support** (`server/engine/claudeDirector.ts`): Node's fetch ignores `HTTP(S)_PROXY`, and on this network direct calls to api.anthropic.com are region-blocked (403 "Request not allowed" — affected BOTH keys; it was never a key problem). The client now detects proxy env vars and routes through undici's `EnvHttpProxyAgent` using **undici's own fetch** (mixing an npm-undici dispatcher into Node's built-in fetch produced opaque connection errors). New dep: `undici`.
+- **Wire schema** (`shared/schemas.ts` + `server/engine/wire.ts`): the strict DirectorTurn schema exceeded the structured-outputs grammar limit ("compiled grammar too large", 400). Added `DirectorTurnWireSchema` (repeated enum-arrays/literal-unions relaxed; choice ids assigned by position; eventOps dropped from the wire) + a sanitizer that coerces wire output back into the strict `DirectorTurn` before clamp. Server-side strictness unchanged.
+- **ARCHITECTURE.md** created (repo map, runtime topology, turn pipeline, AI flow, decisions, gotchas, lessons); **CLAUDE.md §12** now requires updating it after structurally-meaningful tasks; session-start reading list now includes it.
+- Pushed to https://github.com/earthwalker17/chronoloom.git.
+
+### Files Touched
+`server/engine/{claudeDirector,wire}.ts` · `shared/schemas.ts` · `ARCHITECTURE.md` (new) · `CLAUDE.md` · `ROADMAP.md` · `package.json` (undici) · `docs/screenshots/play-live.png` (new)
+
+### Verification
+- `npm run test:live` — **13/13 green**: arrival 276-char zh prose, 4 choices ≥3 tags, zero clamp corrections, turn 2 read **9,320 tokens from prompt cache** (~85% of input).
+- Live server playthrough (interpreter, 4 live turns): the Director chained real consequences across turns (self-report to 市署 → 裴衡 refuses a warrant, counter-offers 底本换清白 → rumor spreads via new market notice). Screenshot `docs/screenshots/play-live.png`.
+- Full regression after changes: typecheck clean · 25 unit tests · 134 e2e assertions · prod build.
+
+### Decisions
+- Keep strict schemas as the single source of truth; the wire schema is explicitly a transport relaxation with a sanitizer, not a second truth.
+- Director-scheduled `eventOps` left out of the live wire (seeded spine drives events); revisit only with evidence the model needs them.
+
+### Issues / Follow-ups
+- Any growth of the wire schema risks re-hitting the grammar ceiling — test `npm run test:live` after schema changes.
+- PROJECT.md §24 demo-ready checklist: all items pass (start session ✓ identity ✓ visual scene ✓ meaningful choices ✓ state updates ✓ next scene reflects actions ✓ recurring relationship ✓ timeline ✓ grounded report ✓ local run docs ✓ main flow stable ✓ screenshot-worthy ✓).

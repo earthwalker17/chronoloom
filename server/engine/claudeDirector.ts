@@ -7,11 +7,13 @@
  */
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
+import { EnvHttpProxyAgent, fetch as undiciFetch } from "undici";
 import type { z } from "zod";
-import { DirectorTurnSchema, LifeReportSchema } from "@shared/schemas";
+import { DirectorTurnWireSchema, LifeReportSchema } from "@shared/schemas";
 import type { Choice, DirectorTurn, LifeReport, QueuedEvent, SessionState } from "@shared/types";
 import type { AppConfig } from "../config";
 import { EngineError, type Director } from "./director";
+import { wireToDirectorTurn } from "./wire";
 import {
   DIRECTOR_RULES,
   REPORT_RULES,
@@ -38,7 +40,28 @@ export class ClaudeDirector implements Director {
   private client: Anthropic;
 
   constructor(private readonly config: AppConfig) {
-    this.client = new Anthropic({ apiKey: config.apiKey, timeout: 120_000 });
+    // Node's fetch ignores HTTP(S)_PROXY env vars; honor them explicitly so
+    // the SDK works behind local proxies (common where direct API access is
+    // region-blocked and only proxied requests succeed). Uses undici's own
+    // fetch + dispatcher pair — mixing npm-undici dispatchers into Node's
+    // built-in fetch fails across versions.
+    const hasProxy = Boolean(
+      process.env.HTTPS_PROXY ?? process.env.HTTP_PROXY ?? process.env.ALL_PROXY,
+    );
+    let fetchOverride: ((url: string | URL | Request, init?: RequestInit) => Promise<Response>) | undefined;
+    if (hasProxy) {
+      const dispatcher = new EnvHttpProxyAgent();
+      fetchOverride = (url, init) =>
+        undiciFetch(url as Parameters<typeof undiciFetch>[0], {
+          ...(init as object),
+          dispatcher,
+        }) as unknown as Promise<Response>;
+    }
+    this.client = new Anthropic({
+      apiKey: config.apiKey,
+      timeout: 120_000,
+      ...(fetchOverride ? { fetch: fetchOverride } : {}),
+    });
   }
 
   /**
@@ -109,25 +132,27 @@ export class ClaudeDirector implements Director {
   }
 
   async startLife(state: SessionState): Promise<DirectorTurn> {
-    return this.callParsed({
+    const wire = await this.callParsed({
       rules: DIRECTOR_RULES,
       userText: buildArrivalPrompt(state),
-      schema: DirectorTurnSchema,
+      schema: DirectorTurnWireSchema,
       effort: "medium",
       maxTokens: TURN_MAX_TOKENS,
     });
+    return wireToDirectorTurn(wire);
   }
 
   async takeTurn(state: SessionState, chosen: Choice, dueEvents: QueuedEvent[]): Promise<DirectorTurn> {
     // Climax turns get deeper simulation; ordinary turns stay snappy.
     const effort = state.turn + 1 === 7 || state.turn + 1 === 10 ? "high" : "medium";
-    return this.callParsed({
+    const wire = await this.callParsed({
       rules: DIRECTOR_RULES,
       userText: buildTurnPrompt(state, chosen, dueEvents),
-      schema: DirectorTurnSchema,
+      schema: DirectorTurnWireSchema,
       effort,
       maxTokens: TURN_MAX_TOKENS,
     });
+    return wireToDirectorTurn(wire);
   }
 
   async writeReport(state: SessionState): Promise<LifeReport> {

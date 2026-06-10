@@ -10,8 +10,9 @@ ChronoLoom is an AI-native alternate-life simulator: a player enters a historica
 At the start of every session:
 1. Read `CLAUDE.md`.
 2. Read `PROJECT.md` for full product context.
-3. Read `ROADMAP.md` if it exists.
-4. Inspect the repository before making implementation decisions.
+3. Read `ARCHITECTURE.md` if it exists (current system map — cheapest onboarding).
+4. Read `ROADMAP.md` if it exists (task history).
+5. Inspect the repository before making implementation decisions.
 
 Keep this file concise. Put detailed context in `PROJECT.md` and task history in `ROADMAP.md`.
 
@@ -127,7 +128,19 @@ For complex tasks, use subagents or agent teams where available. Useful roles in
 
 One main agent should maintain final design coherence.
 
-## 12. ROADMAP.md Protocol
+## 12. Documentation Protocol: ROADMAP.md and ARCHITECTURE.md
+
+Two living documents share the documentation duty:
+
+- **ROADMAP.md** — task history (what was done, when, why). Append-only log.
+- **ARCHITECTURE.md** — current-state map (how the system works now). Edited in place.
+
+After every meaningful task, update **ARCHITECTURE.md** whenever the task changed
+architecture, data/state flow, component behavior, the build/run process, or an
+important implementation assumption — keep it describing how things *are*, concise
+enough to scan, and free of task history. If nothing structural changed, leave it
+untouched.
+
 Create `ROADMAP.md` in the project root if it does not exist.
 
 Use it as the cross-session memory bridge. After every meaningful task, append:

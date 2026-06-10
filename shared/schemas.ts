@@ -252,6 +252,83 @@ export const DirectorTurnSchema = z.object({
 });
 
 // ---------------------------------------------------------------------------
+// Wire schema for structured outputs (relaxed)
+//
+// The full DirectorTurnSchema compiles to a constrained-decoding grammar that
+// exceeds the API's size limit ("compiled grammar too large"). This variant
+// keeps enums only where they are cheap or critical and relaxes repeated
+// enum-arrays / literal-unions to plain strings/numbers; the server-side
+// sanitizer (server/engine/wire.ts) + clamp.ts restore full strictness before
+// anything touches game state.
+// ---------------------------------------------------------------------------
+
+export const WireChoiceSchema = z.object({
+  labelZh: z.string(),
+  hintZh: z.string(),
+  actionTag: ActionTagSchema,
+  risk: RiskLevelSchema,
+});
+
+export const WireNpcUpdateSchema = z.object({
+  npcId: NpcIdSchema,
+  trustDelta: z.number(),
+  fearDelta: z.number(),
+  respectDelta: z.number(),
+  agendaZh: z.string(),
+  memoryZh: z.string(),
+});
+
+export const DirectorTurnWireSchema = z.object({
+  sceneTitleZh: z.string(),
+  consequenceRecapZh: z.string(),
+  proseZh: z.string(),
+  directive: z.object({
+    locationId: LocationIdSchema,
+    timeOfDay: TimeOfDaySchema,
+    weather: WeatherSchema,
+    mood: MoodSchema,
+    crowd: CrowdLevelSchema,
+    lanterns: LanternLevelSchema,
+    focusNpcIds: z.array(z.string()),
+  }),
+  choices: z.array(WireChoiceSchema),
+  update: z.object({
+    moneyDelta: z.number(),
+    healthDelta: z.number(),
+    reputationDelta: z.number(),
+    skillUps: z.array(z.string()),
+    statusAdd: z.array(z.string()),
+    statusRemove: z.array(z.string()),
+    moveTo: z.string(),
+    timeAdvance: z.number(),
+    publicMoodZh: z.string(),
+    tensionDeltas: TensionsSchema,
+    rumorAddZh: z.string(),
+    npcUpdates: z.array(WireNpcUpdateSchema),
+  }),
+  timelineEvents: z.array(
+    z.object({
+      kind: z.string(),
+      titleZh: z.string(),
+      descZh: z.string(),
+      importance: z.number(),
+      npcIds: z.array(z.string()),
+    }),
+  ),
+  causalEntries: z.array(
+    z.object({
+      cause: z.string(),
+      textZh: z.string(),
+      effectsZh: z.array(z.string()),
+      openedZh: z.array(z.string()),
+      closedZh: z.array(z.string()),
+    }),
+  ),
+  isEnding: z.boolean(),
+  endingReasonZh: z.string(),
+});
+
+// ---------------------------------------------------------------------------
 // Life report
 // ---------------------------------------------------------------------------
 
