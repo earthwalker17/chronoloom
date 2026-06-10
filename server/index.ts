@@ -1,4 +1,7 @@
-import "dotenv/config";
+// .env wins over inherited shell vars — for a local game, "edit .env and it
+// just works" beats env-precedence convention.
+import dotenv from "dotenv";
+dotenv.config({ override: true });
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";

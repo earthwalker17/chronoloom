@@ -24,8 +24,17 @@ import {
 const TURN_MAX_TOKENS = 8000;
 const REPORT_MAX_TOKENS = 8000;
 
+export interface CallUsage {
+  inputTokens: number;
+  cacheReadTokens: number;
+  cacheWriteTokens: number;
+  outputTokens: number;
+}
+
 export class ClaudeDirector implements Director {
   readonly name = "claude" as const;
+  /** Usage of the most recent successful call (for verification scripts). */
+  lastUsage: CallUsage | null = null;
   private client: Anthropic;
 
   constructor(private readonly config: AppConfig) {
@@ -83,6 +92,12 @@ export class ClaudeDirector implements Director {
       const parsed = response.parsed_output;
       if (parsed != null) {
         const usage = response.usage;
+        this.lastUsage = {
+          inputTokens: usage.input_tokens,
+          cacheReadTokens: usage.cache_read_input_tokens ?? 0,
+          cacheWriteTokens: usage.cache_creation_input_tokens ?? 0,
+          outputTokens: usage.output_tokens,
+        };
         console.log(
           `[claude] ok effort=${opts.effort} in=${usage.input_tokens} cached=${usage.cache_read_input_tokens ?? 0} out=${usage.output_tokens}`,
         );

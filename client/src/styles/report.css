@@ -1,0 +1,200 @@
+/* 命书 — the life report as a shareable archive card */
+.report-card {
+  position: relative;
+  max-width: 580px;
+  width: 100%;
+  padding: 40px 44px 48px;
+  border: 2.5px solid var(--cinnabar);
+  outline: 1px solid var(--cinnabar);
+  outline-offset: 5px;
+  border-radius: 3px;
+  box-shadow: var(--shadow-soft);
+  color: var(--ink);
+}
+
+.report-card::before,
+.report-card::after {
+  content: "";
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  border: 2px solid var(--cinnabar);
+  opacity: 0.65;
+}
+
+.report-card::before {
+  top: 10px;
+  left: 10px;
+  border-right: none;
+  border-bottom: none;
+}
+
+.report-card::after {
+  bottom: 10px;
+  right: 10px;
+  border-left: none;
+  border-top: none;
+}
+
+.report-head {
+  text-align: center;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  letter-spacing: 0.5em;
+  color: var(--ink-faint);
+  margin-bottom: 22px;
+}
+
+.report-title-row {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 26px;
+  margin-bottom: 24px;
+}
+
+.report-life-title {
+  writing-mode: vertical-rl;
+  font-family: var(--font-display);
+  font-size: 38px;
+  letter-spacing: 0.22em;
+  color: var(--cinnabar);
+  min-height: 170px;
+}
+
+.report-epithet {
+  writing-mode: vertical-rl;
+  font-family: var(--font-display);
+  font-size: 16px;
+  letter-spacing: 0.3em;
+  color: var(--ink-soft);
+  padding-top: 12px;
+}
+
+.report-section {
+  margin-top: 22px;
+}
+
+.report-section h4 {
+  font-family: var(--font-display);
+  font-size: 15px;
+  letter-spacing: 0.4em;
+  color: var(--cinnabar);
+  border-bottom: 1px solid var(--paper-shadow);
+  padding-bottom: 6px;
+  margin-bottom: 10px;
+}
+
+.report-section p {
+  font-size: 14px;
+  line-height: 2;
+  text-align: justify;
+}
+
+.turning-point {
+  position: relative;
+  padding: 7px 0 7px 80px;
+}
+
+.turning-point .day {
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 68px;
+  font-family: var(--font-ui);
+  font-size: 11.5px;
+  color: var(--ink-faint);
+}
+
+.turning-point .tp-title {
+  font-family: var(--font-display);
+  font-size: 15px;
+}
+
+.turning-point .tp-why {
+  font-family: var(--font-ui);
+  font-size: 12.5px;
+  line-height: 1.8;
+  color: var(--ink-soft);
+}
+
+.rel-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 6px 0;
+}
+
+.rel-row .rel-name {
+  font-family: var(--font-display);
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.rel-row .rel-standing {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--paper);
+  background: var(--indigo);
+  padding: 1px 7px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.rel-row .rel-standing.hostile { background: var(--cinnabar); }
+
+.rel-row .rel-arc {
+  font-family: var(--font-ui);
+  font-size: 12.5px;
+  line-height: 1.8;
+  color: var(--ink-soft);
+}
+
+.value-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.value-chip {
+  font-family: var(--font-display);
+  font-size: 15px;
+  letter-spacing: 0.2em;
+  color: var(--indigo);
+  border: 1.5px solid var(--indigo);
+  border-radius: 3px;
+  padding: 5px 12px 5px 14px;
+}
+
+.closing-letter {
+  font-size: 14px;
+  line-height: 2.1;
+  font-style: normal;
+  padding: 16px 18px;
+  background: rgba(43, 38, 32, 0.04);
+  border-left: 3px solid var(--gold);
+}
+
+.report-seal {
+  position: absolute;
+  right: 34px;
+  bottom: 36px;
+  width: 64px;
+  height: 64px;
+  border: 3px solid var(--cinnabar);
+  border-radius: 6px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  place-items: center;
+  font-family: var(--font-display);
+  font-size: 20px;
+  color: var(--cinnabar);
+  transform: rotate(-3deg);
+  opacity: 0.85;
+}
+
+.report-actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+}

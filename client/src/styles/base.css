@@ -1,0 +1,266 @@
+@import "./tokens.css";
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--ink);
+  background: var(--night-deep);
+  overflow: hidden;
+}
+
+button {
+  font-family: var(--font-display);
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+}
+
+.app-root {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+.canvas-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.canvas-layer canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* CSS stand-in shown until/unless the 3D layer is available */
+.scene-fallback {
+  position: absolute;
+  inset: 0;
+  transition: background 1.6s ease;
+}
+
+.vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(10, 12, 20, 0.55) 100%);
+  z-index: 1;
+}
+
+.ui-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  pointer-events: none;
+}
+
+.ui-layer > * {
+  pointer-events: auto;
+}
+
+/* --- shared overlay screens (landing / intro / identity / report) --- */
+.screen {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 28px;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.screen-dim {
+  background: linear-gradient(180deg, rgba(18, 23, 36, 0.55), rgba(18, 23, 36, 0.75));
+}
+
+.title-vertical {
+  writing-mode: vertical-rl;
+  font-family: var(--font-display);
+  letter-spacing: 0.35em;
+  color: var(--paper);
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.6);
+}
+
+.btn-cinnabar {
+  font-size: 20px;
+  letter-spacing: 0.3em;
+  padding: 14px 42px 14px 46px;
+  color: var(--paper);
+  background: linear-gradient(160deg, var(--cinnabar-bright), var(--cinnabar));
+  border-radius: 4px;
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-cinnabar:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(18, 23, 36, 0.5);
+}
+
+.btn-ghost {
+  font-size: 15px;
+  letter-spacing: 0.2em;
+  padding: 10px 26px;
+  color: var(--paper-deep);
+  border: 1px solid rgba(242, 234, 216, 0.4);
+  border-radius: 4px;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.btn-ghost:hover {
+  border-color: var(--paper);
+  color: var(--paper);
+}
+
+.chip {
+  display: inline-block;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  padding: 4px 10px;
+  border-radius: 2px;
+  border: 1px solid rgba(242, 234, 216, 0.35);
+  color: var(--paper-deep);
+}
+
+/* paper scroll card (era intro etc.) */
+.scroll-card {
+  max-width: 560px;
+  width: 100%;
+  padding: 36px 40px;
+  border-radius: var(--panel-radius);
+  border: 1px solid var(--paper-shadow);
+  box-shadow: var(--shadow-soft);
+  color: var(--ink);
+}
+
+.scroll-card h2 {
+  font-family: var(--font-display);
+  font-size: 26px;
+  letter-spacing: 0.25em;
+  margin-bottom: 6px;
+}
+
+.scroll-card .sub {
+  font-family: var(--font-ui);
+  font-size: 12.5px;
+  color: var(--ink-faint);
+  letter-spacing: 0.15em;
+  margin-bottom: 18px;
+}
+
+.scroll-card p {
+  font-size: 15.5px;
+  line-height: 2;
+  text-align: justify;
+}
+
+.rumor-chip {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  line-height: 1.7;
+  padding: 8px 12px;
+  background: rgba(43, 38, 32, 0.05);
+  border-left: 3px solid var(--gold);
+  color: var(--ink-soft);
+}
+
+/* identity cards */
+.identity-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 18px;
+  max-width: 960px;
+  width: 100%;
+}
+
+.identity-card {
+  position: relative;
+  padding: 26px 20px 20px;
+  border-radius: var(--panel-radius);
+  border: 1px solid var(--paper-shadow);
+  box-shadow: var(--shadow-paper);
+  text-align: center;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, outline 0.1s ease;
+  outline: 2px solid transparent;
+}
+
+.identity-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-soft);
+}
+
+.identity-card.selected {
+  outline: 2.5px solid var(--cinnabar);
+}
+
+.identity-glyph {
+  width: 84px;
+  height: 84px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 44px;
+  color: var(--paper);
+}
+
+.identity-card h3 {
+  font-family: var(--font-display);
+  font-size: 20px;
+  letter-spacing: 0.2em;
+  margin-bottom: 8px;
+}
+
+.identity-card .line {
+  font-size: 13.5px;
+  line-height: 1.8;
+  color: var(--ink-soft);
+  min-height: 4.8em;
+}
+
+.identity-card .hints {
+  margin-top: 10px;
+  font-family: var(--font-ui);
+  font-size: 11.5px;
+  color: var(--ink-faint);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fade-in {
+  animation: fadeIn 0.7s ease both;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
