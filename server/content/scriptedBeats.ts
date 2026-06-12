@@ -17,7 +17,7 @@ import type {
   StatusId,
   TimelineKind,
 } from "@shared/constants";
-import type { Choice, SceneDirective } from "@shared/types";
+import type { Choice, NpcLine, SceneDirective } from "@shared/types";
 
 // ---------------------------------------------------------------------------
 // Spine scenes
@@ -34,7 +34,14 @@ export interface SpineScene {
   proseZh: string;
   identityProseZh?: Partial<Record<IdentityId, string>>;
   choices: Choice[];
+  /** In-scene speech bubbles (focus NPCs only — clamp drops the rest). */
+  npcLines?: NpcLine[];
 }
+
+/** Costs/gates/anchor on an authored choice; omitted = free and ungated. */
+type ChoiceExtras = Partial<
+  Pick<Choice, "anchorNpcId" | "moneyCost" | "staminaCost" | "minReputation" | "minTrustNpcId" | "minTrustTier">
+>;
 
 const c = (
   id: Choice["id"],
@@ -42,7 +49,21 @@ const c = (
   hintZh: string,
   actionTag: ActionTag,
   risk: Choice["risk"],
-): Choice => ({ id, labelZh, hintZh, actionTag, risk });
+  extras: ChoiceExtras = {},
+): Choice => ({
+  id,
+  labelZh,
+  hintZh,
+  actionTag,
+  risk,
+  anchorNpcId: "",
+  moneyCost: 0,
+  staminaCost: 0,
+  minReputation: -100,
+  minTrustNpcId: "",
+  minTrustTier: "",
+  ...extras,
+});
 
 export const SPINE_SCENES: SpineScene[] = [
   // ---- T0 · 试灯 · 初至 ----
@@ -75,8 +96,8 @@ export const SPINE_SCENES: SpineScene[] = [
     choices: [
       c("c1", "专心本业，先把眼前的活计做好", "稳妥，攒几个铜钱", "pursue_money", "low"),
       c("c2", "往市楼十字看官府的告示", "看清风向再动", "observe_wait", "low"),
-      c("c3", "去何家酒肆结识些有用的人", "人脉即门路", "seek_patronage", "medium"),
-      c("c4", "循着失账的传闻暗暗打听", "祸福难料", "take_risk", "medium"),
+      c("c3", "去何家酒肆结识些有用的人", "人脉即门路，得备份薄礼", "seek_patronage", "medium", { moneyCost: 100 }),
+      c("c4", "循着失账的传闻暗暗打听", "祸福难料，费神费力", "take_risk", "medium", { staminaCost: 5 }),
     ],
   },
   // ---- T1 · 市楼鼓声 ----
@@ -96,10 +117,11 @@ export const SPINE_SCENES: SpineScene[] = [
       "翌日清晨，市楼下围满了人。市丞裴衡立在榜前，青袍纤尘不染：灯节七日，核查各行税册，丁是丁，卯是卯。有摊贩低声抱怨灯节查账不近人情，立刻被小吏厉声喝住。人群里，你听见'绢行''失账'两个词压着嗓子传来传去。",
     choices: [
       c("c1", "在人群里安静听完，不出头", "记下每一张脸", "observe_wait", "low"),
-      c("c2", "替被喝斥的摊贩说句公道话", "众目睽睽之下", "protect_someone", "medium"),
-      c("c3", "上前与市署小吏攀谈，混个脸熟", "官面上的人情", "seek_patronage", "medium"),
+      c("c2", "替被喝斥的摊贩说句公道话", "众目睽睽之下", "protect_someone", "medium", { staminaCost: 5 }),
+      c("c3", "上前与市署小吏攀谈，混个脸熟", "官面上的人情，少不了茶钱", "seek_patronage", "medium", { anchorNpcId: "pei_heng", moneyCost: 50 }),
       c("c4", "把听来的风声拿去卖给何十三娘", "消息也是货", "pursue_money", "medium"),
     ],
+    npcLines: [{ npcId: "pei_heng", lineZh: "灯节七日，税册一日不可乱。丁是丁，卯是卯。" }],
   },
   // ---- T2 · 风声渐紧 (seed_ledger_rumor) ----
   {
@@ -123,10 +145,14 @@ export const SPINE_SCENES: SpineScene[] = [
       copyist: "捎话的人就坐在角落里，远远向你举了举杯——他还在等你点头藏那页'账'。",
     },
     choices: [
-      c("c1", "与崔九当面对质，把话挑开", "撕破脸皮", "reveal_info", "high"),
-      c("c2", "不动声色，自己暗中查证", "袖里藏针", "conceal_info", "medium"),
-      c("c3", "奉上谢礼，请何十三娘居中打探", "人情有价", "seek_patronage", "medium"),
+      c("c1", "与崔九当面对质，把话挑开", "撕破脸皮，劳心劳力", "reveal_info", "high", { staminaCost: 8 }),
+      c("c2", "不动声色，自己暗中查证", "袖里藏针", "conceal_info", "medium", { staminaCost: 5 }),
+      c("c3", "奉上谢礼，请何十三娘居中打探", "人情有价", "seek_patronage", "medium", { anchorNpcId: "he_shisan", moneyCost: 150 }),
       c("c4", "置身事外，只顾自己的营生", "明哲保身", "preserve_reputation", "low"),
+    ],
+    npcLines: [
+      { npcId: "he_shisan", lineZh: "风声不是空穴来风，有人在背后推。" },
+      { npcId: "lvyao", lineZh: "弦断了可以再续，名声断了呢？" },
     ],
   },
   // ---- T3 · 告示与冷眼 (seed_audit_notice) ----
@@ -146,11 +172,12 @@ export const SPINE_SCENES: SpineScene[] = [
     proseZh:
       "暮色里，市署的告示贴满了各行的门柱：税册十九日前缴验，匿账者依律论处。崔九带着两个行里的伙计'恰好'从你身边经过，扬声笑道：有些人来历不明，行里诸位还是把货看紧些。周围的目光像细针一样落在你背上。",
     choices: [
-      c("c1", "当场回敬，叫他把话说明白", "针尖对麦芒", "reveal_info", "high"),
+      c("c1", "当场回敬，叫他把话说明白", "针尖对麦芒", "reveal_info", "high", { anchorNpcId: "cui_jiu", staminaCost: 8 }),
       c("c2", "先去求一位长者替你作保", "找棵大树", "seek_patronage", "medium"),
-      c("c3", "拿出积蓄打点，把流言压下去", "破财消灾", "preserve_reputation", "medium"),
-      c("c4", "暗中收集对自己有利的凭据", "以备不时", "conceal_info", "medium"),
+      c("c3", "拿出积蓄打点，把流言压下去", "破财消灾", "preserve_reputation", "medium", { moneyCost: 300 }),
+      c("c4", "暗中收集对自己有利的凭据", "以备不时", "conceal_info", "medium", { staminaCost: 5 }),
     ],
+    npcLines: [{ npcId: "cui_jiu", lineZh: "有些人来历不明，诸位还是把货看紧些。" }],
   },
   // ---- T4 · 查到头上 (seed_audit_personal) ----
   {
@@ -168,11 +195,12 @@ export const SPINE_SCENES: SpineScene[] = [
     proseZh:
       "十五将至，灯轮试了第一回火。可清晨来寻你的不是灯匠，是市署的差役——裴衡要当面问你的话。市楼下设了张案，裴衡的目光像秤一样把你从头到脚称了一遍：失账一事，与你有关的几处，本丞要听你亲口说。",
     choices: [
-      c("c1", "据实以告，连对自己不利的也不瞒", "坦荡有险", "reveal_info", "high"),
+      c("c1", "据实以告，连对自己不利的也不瞒", "坦荡有险", "reveal_info", "high", { anchorNpcId: "pei_heng" }),
       c("c2", "避重就轻，先把自己摘出去", "言多必失", "conceal_info", "medium"),
-      c("c3", "借机点出崔九近日行迹可疑", "祸水东引", "take_risk", "high"),
+      c("c3", "借机点出崔九近日行迹可疑", "祸水东引", "take_risk", "high", { staminaCost: 5 }),
       c("c4", "恭谨应对，礼数滴水不漏", "不功不过", "preserve_reputation", "low"),
     ],
+    npcLines: [{ npcId: "pei_heng", lineZh: "失账一事，与你有关的几处，本丞要听你亲口说。" }],
   },
   // ---- T5 · 灯下生意 ----
   {
@@ -191,11 +219,12 @@ export const SPINE_SCENES: SpineScene[] = [
     proseZh:
       "正灯之日，金吾不禁，长安倾城而出。东市的行情一日三变：绢价因灯幡涨了三成，胡商的香料被抢购一空，连寺院的抄经酬金都翻了倍。乱世藏祸，盛世藏金——这样的日子，七年难遇一回。",
     choices: [
-      c("c1", "抓住灯节行情，放手做一笔", "盛市之利", "pursue_money", "medium"),
-      c("c2", "把工夫花在结交贵人上", "灯下识人", "pursue_status", "medium"),
-      c("c3", "帮绿腰多攒些赎身的赏钱", "雪中送炭", "protect_someone", "low"),
+      c("c1", "抓住灯节行情，放手做一笔", "盛市之利，先得压本钱", "pursue_money", "medium", { moneyCost: 200 }),
+      c("c2", "把工夫花在结交贵人上", "灯下识人，礼数不能省", "pursue_status", "medium", { anchorNpcId: "he_shisan", moneyCost: 150 }),
+      c("c3", "帮绿腰多攒些赎身的赏钱", "雪中送炭", "protect_someone", "low", { moneyCost: 100 }),
       c("c4", "静观市面，留意人潮里的异动", "灯下黑", "observe_wait", "low"),
     ],
+    npcLines: [{ npcId: "he_shisan", lineZh: "这样的行情，七年难遇一回。" }],
   },
   // ---- T6 · 身契风波 (seed_lvyao_crisis) ----
   {
@@ -213,10 +242,14 @@ export const SPINE_SCENES: SpineScene[] = [
     proseZh:
       "上元正夜，满城灯如白昼。酒肆里却出了事：绢行的人拿着文书上门，说绿腰的身契押在那桩账目纠纷里，今夜就要带人走。琵琶横在她膝上，弦断了一根。她没有哭，只是看了你一眼——满座宾客，她只看了你一眼。",
     choices: [
-      c("c1", "倾囊相助，替她把这笔押钱垫上", "千金一诺", "protect_someone", "high"),
-      c("c2", "求何十三娘出面转圜", "借她的脸面", "seek_patronage", "medium"),
+      c("c1", "倾囊相助，替她把这笔押钱垫上", "千金一诺", "protect_someone", "high", { anchorNpcId: "lvyao", moneyCost: 800 }),
+      c("c2", "求何十三娘出面转圜", "借她的脸面，得有些交情", "seek_patronage", "medium", { anchorNpcId: "he_shisan", minTrustNpcId: "he_shisan", minTrustTier: "相识" }),
       c("c3", "劝她暂且忍耐，莫在风口生事", "留得青山", "observe_wait", "low"),
-      c("c4", "把身契背后的隐情当众捅出去", "鱼死网破", "reveal_info", "high"),
+      c("c4", "把身契背后的隐情当众捅出去", "鱼死网破", "reveal_info", "high", { staminaCost: 8 }),
+    ],
+    npcLines: [
+      { npcId: "lvyao", lineZh: "……今夜过后，怕是连这琵琶也不是我的了。" },
+      { npcId: "he_shisan", lineZh: "莫冲动。这局里下注的，不止你一个。" },
     ],
   },
   // ---- T7 · 灯夜诗会 (seed_poetry_night) ----
@@ -235,10 +268,14 @@ export const SPINE_SCENES: SpineScene[] = [
     proseZh:
       "十七夜，雪后初霁，沈记书肆的灯下诗会开了席。檐下灯影映着薄雪，满座有青衫的举子、便服的官人、装作风雅的商贾。沈砚秋立在灯下环视一周，朗声道：灯下无尊卑，一句好诗，胜过十年寒暄。你看见裴衡也在,崔九也在——这一夜，各方的眼睛都聚在一处。",
     choices: [
-      c("c1", "献上一首用心之作", "以文会友", "pursue_art", "medium"),
-      c("c2", "借诗会向在座的贵人自荐", "毛遂自荐", "pursue_status", "medium"),
-      c("c3", "当众点破账册疑云，语惊四座", "石破天惊", "take_risk", "high"),
+      c("c1", "献上一首用心之作", "以文会友", "pursue_art", "medium", { anchorNpcId: "shen_yanqiu" }),
+      c("c2", "借诗会向在座的贵人自荐", "毛遂自荐，得有几分名望压场", "pursue_status", "medium", { anchorNpcId: "pei_heng", minReputation: 10 }),
+      c("c3", "当众点破账册疑云，语惊四座", "石破天惊", "take_risk", "high", { staminaCost: 8 }),
       c("c4", "退居一隅，冷眼看各方神色", "壁上观", "observe_wait", "low"),
+    ],
+    npcLines: [
+      { npcId: "shen_yanqiu", lineZh: "灯下无尊卑。一句好诗，胜过十年寒暄。" },
+      { npcId: "cui_jiu", lineZh: "呵，今夜倒要看看，谁压得住场。" },
     ],
   },
   // ---- T8 · 收灯前夜 (seed_harvest) ----
@@ -257,11 +294,12 @@ export const SPINE_SCENES: SpineScene[] = [
     proseZh:
       "十八，灯火渐收，账却要见底了。这些天你布下的线、结下的情、得罪的人，一齐找上门来。失账一案到了图穷匕见的时候：那页要命的账，下落隐隐指向你能够到的地方。谁先拿到它，谁就握住了所有人的命门。",
     choices: [
-      c("c1", "把查到的凭据交给裴衡", "交给官法", "reveal_info", "high"),
-      c("c2", "拿凭据与崔九做一笔交换", "与虎谋皮", "pursue_money", "high"),
+      c("c1", "把查到的凭据交给裴衡", "交给官法——他得信你才肯接", "reveal_info", "high", { anchorNpcId: "pei_heng", minTrustNpcId: "pei_heng", minTrustTier: "相识" }),
+      c("c2", "拿凭据与崔九做一笔交换", "与虎谋皮", "pursue_money", "high", { anchorNpcId: "cui_jiu" }),
       c("c3", "把凭据毁掉，谁也别想拿它害人", "一了百了", "conceal_info", "medium"),
-      c("c4", "先把绿腰和身边的人护周全", "人比账重", "protect_someone", "medium"),
+      c("c4", "先把绿腰和身边的人护周全", "人比账重", "protect_someone", "medium", { staminaCost: 5 }),
     ],
+    npcLines: [{ npcId: "pei_heng", lineZh: "十九日缴验，一页都不能少。" }],
   },
   // ---- T9 · 图穷匕见 ----
   {
@@ -279,11 +317,12 @@ export const SPINE_SCENES: SpineScene[] = [
     proseZh:
       "夜风穿过春明门夹道，吹得孤灯明明灭灭。崔九派人递了话：亥时，夹道一叙，账页的事'好商量'。墙影深处似乎不止一个人影。长安的灯节再亮，也照不进这条巷子。",
     choices: [
-      c("c1", "赴约，亲手了断这件事", "深入虎穴", "take_risk", "high"),
-      c("c2", "请何十三娘设局，借力打力", "四两千斤", "seek_patronage", "medium"),
+      c("c1", "赴约，亲手了断这件事", "深入虎穴", "take_risk", "high", { anchorNpcId: "cui_jiu", staminaCost: 12 }),
+      c("c2", "请何十三娘设局，借力打力", "四两千斤——本钱与交情都要", "seek_patronage", "medium", { moneyCost: 300, minTrustNpcId: "he_shisan", minTrustTier: "信任" }),
       c("c3", "守在明处，绝不踏进暗巷", "君子不立危墙", "preserve_reputation", "low"),
       c("c4", "抢先一步，把约谈之事告到市署", "先发制人", "reveal_info", "high"),
     ],
+    npcLines: [{ npcId: "cui_jiu", lineZh: "亥时，夹道。账页的事，好商量。" }],
   },
   // ---- T10 · 灯落之时 (seed_finale) ----
   {

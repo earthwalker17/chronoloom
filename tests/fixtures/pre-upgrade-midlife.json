@@ -1,0 +1,430 @@
+{
+  "id": "ad7b6709-6f09-4277-b4dd-ac67725680a3",
+  "schemaVersion": 1,
+  "createdAt": "2026-06-10T17:08:27.690Z",
+  "updatedAt": "2026-06-10T17:11:46.731Z",
+  "engine": "claude",
+  "identityId": "interpreter",
+  "turn": 3,
+  "chapter": 1,
+  "finished": false,
+  "endingReasonZh": "",
+  "player": {
+    "identityId": "interpreter",
+    "nameZh": "安四郎",
+    "age": 26,
+    "money": 1200,
+    "health": 88,
+    "reputation": 1,
+    "skills": {
+      "letters": 0,
+      "etiquette": 2,
+      "bargaining": 2,
+      "tongues": 3,
+      "streetwise": 2
+    },
+    "tendencies": {
+      "seek_patronage": 1,
+      "protect_someone": 0,
+      "conceal_info": 0,
+      "reveal_info": 0,
+      "take_risk": 0,
+      "preserve_reputation": 1,
+      "pursue_money": 0,
+      "pursue_status": 0,
+      "pursue_art": 0,
+      "observe_wait": 1
+    },
+    "statuses": [],
+    "accessTags": [
+      "caravan_court"
+    ],
+    "location": "persian_lodge"
+  },
+  "world": {
+    "day": 2,
+    "timeOfDay": "noon",
+    "weather": "clear",
+    "publicMoodZh": "市楼新榜一出，各行噤声，都说查账要动真格，译语人安四郎的名字也夹在风声里。",
+    "tensions": {
+      "official_scrutiny": 9,
+      "guild_dispute": 6,
+      "festival_fervor": 6,
+      "street_danger": 2
+    },
+    "rumors": [
+      {
+        "id": "rumor_seed_1",
+        "textZh": "崔家绢行的账册短了一页，行里人人自危。"
+      },
+      {
+        "id": "rumor_seed_2",
+        "textZh": "沈记书肆十七夜设灯下诗会，听说有贵人微服要来。"
+      },
+      {
+        "id": "rumor_seed_3",
+        "textZh": "波斯邸一笔大货款悬着没结，胡商放话：灯节之内必要个说法。"
+      },
+      {
+        "id": "rumor_1_4",
+        "textZh": "那个胡人译语的安四郎，灯节头一日就自己走进了市署。"
+      },
+      {
+        "id": "rumor_2_5",
+        "textZh": "绢行短的那页账，怕是与波斯邸的悬款一脉相连，牵线的译语人难脱干系。"
+      },
+      {
+        "id": "rumor_3_6",
+        "textZh": "波斯邸那笔悬款，卡在崔家绢行迟迟不出的一张验货回执上。"
+      }
+    ]
+  },
+  "npcs": {
+    "shen_yanqiu": {
+      "id": "shen_yanqiu",
+      "nameZh": "沈砚秋",
+      "roleZh": "书肆主人",
+      "motivationZh": "屡试不第，半生蹉跎。想在闭眼之前，再亲手教出一个成器的人。",
+      "trust": 0,
+      "fear": 5,
+      "respect": 40,
+      "agendaZh": "筹备十七夜的灯下诗会，暗中物色可造之才，也想借诗会探一探市署查账的风向。",
+      "memory": []
+    },
+    "cui_jiu": {
+      "id": "cui_jiu",
+      "nameZh": "崔九",
+      "roleZh": "崔家绢行学徒",
+      "motivationZh": "出身行内，眼里只有往上爬的梯子。谁挡路，谁就是敌人。",
+      "trust": -5,
+      "fear": 12,
+      "respect": 15,
+      "agendaZh": "听闻有人在查那张验货回执，急着撇清绢行的干系。",
+      "memory": [
+        {
+          "turn": 3,
+          "summaryZh": "风声说有人盯上了绢行迟迟未出的验货回执。"
+        }
+      ]
+    },
+    "lvyao": {
+      "id": "lvyao",
+      "nameZh": "绿腰",
+      "roleZh": "酒肆琵琶女",
+      "motivationZh": "身契押在别人手里，攒钱赎身是唯一的念想。最怕的是被转卖出长安。",
+      "trust": 10,
+      "fear": 30,
+      "respect": 10,
+      "agendaZh": "灯节客多，想多攒些赏钱；又听说身契被卷进了绢行的纠纷，正暗暗打听下落。",
+      "memory": [
+        {
+          "turn": 0,
+          "summaryZh": "你懂她唱词里的西域口音"
+        }
+      ]
+    },
+    "pei_heng": {
+      "id": "pei_heng",
+      "nameZh": "裴衡",
+      "roleZh": "市署市丞",
+      "motivationZh": "明经出身，在市署熬了八年。想借整顿东市做出政绩，迁官出去。疑心极重。",
+      "trust": -1,
+      "fear": 0,
+      "respect": 23,
+      "agendaZh": "既要底本，也在等安四郎松口；张榜后更急于在灯节内揪出做假账之人。",
+      "memory": [
+        {
+          "turn": 0,
+          "summaryZh": "官府对译语人素有连坐之疑"
+        },
+        {
+          "turn": 1,
+          "summaryZh": "译语人安四郎不待传唤,自投市署陈说译契原委，言辞齐整，被我留下问底本。"
+        },
+        {
+          "turn": 2,
+          "summaryZh": "安四郎反求官凭护身，言辞机敏却避重就轻。我只许他以底本换清白，未予担保。"
+        },
+        {
+          "turn": 3,
+          "summaryZh": "安四郎未应换清白之议，反回波斯邸自查，迟迟不交底本。"
+        }
+      ]
+    },
+    "he_shisan": {
+      "id": "he_shisan",
+      "nameZh": "何十三娘",
+      "roleZh": "酒肆主人",
+      "motivationZh": "寡居多年撑起酒肆。她要让这间酒肆成为谁都需要、谁也不敢得罪的地方。",
+      "trust": 15,
+      "fear": 5,
+      "respect": 30,
+      "agendaZh": "各方的消息都往她耳朵里钻。她在掂量这次查账风波里，哪一边的人情卖出去最值钱。",
+      "memory": [
+        {
+          "turn": 0,
+          "summaryZh": "多年老主顾，互通消息"
+        }
+      ]
+    }
+  },
+  "eventQueue": [
+    {
+      "id": "seed_ledger_rumor",
+      "hintZh": "胡商间风传：失账与波斯邸悬着的货款有关，译契之人难脱干系。",
+      "dueTurn": 2,
+      "status": "fired",
+      "source": "seed"
+    },
+    {
+      "id": "seed_audit_notice",
+      "hintZh": "市署在市楼张榜：灯节期间核查各行税册，市丞裴衡亲自坐镇。",
+      "dueTurn": 3,
+      "status": "fired",
+      "source": "seed"
+    },
+    {
+      "id": "seed_audit_personal",
+      "hintZh": "查账的目光落到了你身上——裴衡的人点名要问你的话。",
+      "dueTurn": 4,
+      "status": "pending",
+      "source": "seed"
+    },
+    {
+      "id": "seed_lvyao_crisis",
+      "hintZh": "绿腰的身契被人当作绢行纠纷的抵押要走了——她今夜可能被带离酒肆。",
+      "dueTurn": 6,
+      "status": "pending",
+      "source": "seed"
+    },
+    {
+      "id": "seed_poetry_night",
+      "hintZh": "沈砚秋的灯下诗会就在今夜，各方人物都会到场。",
+      "dueTurn": 7,
+      "status": "pending",
+      "source": "seed"
+    },
+    {
+      "id": "seed_harvest",
+      "hintZh": "灯节将尽，你此前的所作所为开始结出果实——该来的人和事都找上门了。",
+      "dueTurn": 8,
+      "status": "pending",
+      "source": "seed"
+    },
+    {
+      "id": "seed_finale",
+      "hintZh": "正月十九，收灯。失账风波必须在今日了结，每个人都要付出代价或得到报偿。",
+      "dueTurn": 10,
+      "status": "pending",
+      "source": "seed"
+    }
+  ],
+  "timeline": [
+    {
+      "id": "tl_0_0",
+      "turn": 0,
+      "day": 1,
+      "kind": "milestone",
+      "titleZh": "初入灯市",
+      "descZh": "安四郎在波斯邸接下悬账的烫手差事，胡商催索，官府盯梢，灯节七日的暗流由此而起。",
+      "importance": 2,
+      "npcIds": [
+        "pei_heng",
+        "he_shisan"
+      ],
+      "locationId": "persian_lodge"
+    },
+    {
+      "id": "tl_1_0",
+      "turn": 1,
+      "day": 1,
+      "kind": "decision",
+      "titleZh": "自投市署",
+      "descZh": "安四郎抢在胡商催讨前赴市署向裴衡陈情，澄清自己只是译契之人，却被裴衡盯上索要底本。",
+      "importance": 2,
+      "npcIds": [
+        "pei_heng"
+      ],
+      "locationId": "market_office"
+    },
+    {
+      "id": "tl_2_0",
+      "turn": 2,
+      "day": 2,
+      "kind": "decision",
+      "titleZh": "求凭未得",
+      "descZh": "安四郎向裴衡讨官凭护身，反被索要译契底本，且染上市井流言：悬账与他牵连。",
+      "importance": 2,
+      "npcIds": [
+        "pei_heng"
+      ],
+      "locationId": "market_office"
+    },
+    {
+      "id": "tl_3_0",
+      "turn": 3,
+      "day": 2,
+      "kind": "decision",
+      "titleZh": "市楼张榜",
+      "descZh": "市署在市楼张榜，明示灯节期间核查各行税册，裴衡坐镇，市井噤声。",
+      "importance": 2,
+      "npcIds": [
+        "pei_heng"
+      ],
+      "locationId": "persian_lodge"
+    },
+    {
+      "id": "tl_3_1",
+      "turn": 3,
+      "day": 2,
+      "kind": "decision",
+      "titleZh": "回执之谜",
+      "descZh": "安四郎回波斯邸查账，发现悬款卡在崔家绢行未出的验货回执上，疑与失账那页相连。",
+      "importance": 2,
+      "npcIds": [],
+      "locationId": "persian_lodge"
+    }
+  ],
+  "ledger": [
+    {
+      "id": "cl_0_0",
+      "turn": 0,
+      "cause": "player_action",
+      "textZh": "因你译的那纸契书惹出货款纠纷，胡商催讨，市署起疑，你被夹在两边之间。",
+      "effectsZh": [
+        "胡商等你三日内给说法",
+        "市署对译语人存连坐之疑"
+      ],
+      "openedZh": [
+        "核清账目真相",
+        "在官商之间选边"
+      ],
+      "closedZh": []
+    },
+    {
+      "id": "cl_1_0",
+      "turn": 1,
+      "cause": "player_action",
+      "textZh": "你主动赴市署自陈，换来裴衡一分另眼相看，却也把自己摆到了官府的眼皮底下。",
+      "effectsZh": [
+        "裴衡对你略增信任，却索要译契底本",
+        "你落下『官府盯视』之名"
+      ],
+      "openedZh": [
+        "呈底本自证",
+        "借官凭护身"
+      ],
+      "closedZh": [
+        "完全置身事外的退路"
+      ]
+    },
+    {
+      "id": "cl_2_0",
+      "turn": 2,
+      "cause": "player_action",
+      "textZh": "你求官凭护身，裴衡不给伞却要底本，把『清白』的代价系在那纸契书上；与此同时，市井流言已把你与失账、悬款绑作一处。",
+      "effectsZh": [
+        "你落下『官府盯视』之实",
+        "流言指你为牵线之人"
+      ],
+      "openedZh": [
+        "以底本换清白",
+        "查清悬款虚实以自保"
+      ],
+      "closedZh": [
+        "凭官凭轻易脱身的指望"
+      ]
+    },
+    {
+      "id": "cl_3_0",
+      "turn": 3,
+      "cause": "player_action",
+      "textZh": "你不急着选边，回波斯邸探明虚实，查出悬款的死结在崔家未出的'验货回执'，而非你译的契书。",
+      "effectsZh": [
+        "你握住了一条指向崔家的线索",
+        "查账风向逼近绢行"
+      ],
+      "openedZh": [
+        "以回执为筹码自证",
+        "顺线追查失账真相"
+      ],
+      "closedZh": [
+        "你独担牵线之罪的最坏可能"
+      ]
+    }
+  ],
+  "scene": {
+    "titleZh": "探账波斯邸",
+    "consequenceRecapZh": "你没接裴衡『以底本换清白』的话头，留了余地；可流言不等人——市楼新榜一出，满市都知道税册要查，连带把你与悬款绑得更紧了。",
+    "proseZh": "晨光斜照在波斯邸的朱柱青瓦上，驼铃零落，香料气混着尘土。你绕过前院，往管账的胡商伽色尼住处去。途中听见市楼那边鼓噪——有人念榜：『市署核查各行税册，灯节不辍，市丞裴衡坐镇。』念到末句，几个胡商交换了眼色，话头都压低了。伽色尼请你入内，铺开一卷波斯文的货单，指尖在一笔数目上顿住：那批进的是于阗白氎，价已付七成，余款却卡在崔家绢行迟迟不出的'验货回执'上。他低声道：'回执不来，款就悬着。崔家那页失账，会不会就是这张回执？'屋外鼓声又起，灯影未燃，朱柱却已映出几分肃杀。你心里渐渐明白，这团乱麻的结，原不在你译的那纸契上。",
+    "directive": {
+      "locationId": "persian_lodge",
+      "timeOfDay": "morning",
+      "weather": "clear",
+      "mood": "tense",
+      "crowd": "busy",
+      "lanterns": "none",
+      "focusNpcIds": [
+        "pei_heng"
+      ]
+    },
+    "choices": [
+      {
+        "id": "c1",
+        "labelZh": "把'回执'这条线告诉裴衡，换自己清白",
+        "hintZh": "或解你嫌疑，却把崔家彻底推进火坑",
+        "actionTag": "reveal_info",
+        "risk": "medium"
+      },
+      {
+        "id": "c2",
+        "labelZh": "先去酒肆找何十三娘，探这回执的下落",
+        "hintZh": "消息有价，人情也有价",
+        "actionTag": "observe_wait",
+        "risk": "low"
+      },
+      {
+        "id": "c3",
+        "labelZh": "替伽色尼出面，去绢行讨那张回执",
+        "hintZh": "直面崔九，绢行的水深得很",
+        "actionTag": "take_risk",
+        "risk": "high"
+      },
+      {
+        "id": "c4",
+        "labelZh": "暂且按下不说，自己先抄录货单存证",
+        "hintZh": "留一手底牌，但拖得越久流言越凶",
+        "actionTag": "conceal_info",
+        "risk": "low"
+      }
+    ]
+  },
+  "history": [
+    {
+      "turn": 1,
+      "choiceId": "c4",
+      "labelZh": "抢先去市署，主动向裴丞说明自己只是译契",
+      "actionTag": "preserve_reputation",
+      "engineUsed": "claude"
+    },
+    {
+      "turn": 2,
+      "choiceId": "c3",
+      "labelZh": "反请裴丞作主，求一纸官凭护身",
+      "actionTag": "seek_patronage",
+      "engineUsed": "claude"
+    },
+    {
+      "turn": 3,
+      "choiceId": "c3",
+      "labelZh": "先不应，回波斯邸探明那笔货款的虚实",
+      "actionTag": "observe_wait",
+      "engineUsed": "claude"
+    }
+  ],
+  "validationLog": [
+    "t1: moveTo market_office rejected (no office access)",
+    "t2: moveTo market_office rejected (no office access)"
+  ],
+  "report": null
+}

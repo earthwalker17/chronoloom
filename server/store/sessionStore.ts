@@ -3,6 +3,7 @@ import path from "node:path";
 import { SessionStateSchema } from "@shared/schemas";
 import type { SessionState } from "@shared/types";
 import { atomicWriteFile } from "./atomicWrite";
+import { migrateSessionJson } from "./migrate";
 
 export class StateCorruptError extends Error {
   constructor(id: string, cause: unknown) {
@@ -37,7 +38,7 @@ export class SessionStore {
       throw err;
     }
     try {
-      return SessionStateSchema.parse(JSON.parse(raw));
+      return SessionStateSchema.parse(migrateSessionJson(JSON.parse(raw)));
     } catch (err) {
       throw new StateCorruptError(id, err);
     }

@@ -14,7 +14,8 @@ import {
 } from "../content/scriptedBeats";
 import { renderRecap } from "../sim/recap";
 import { buildScriptedReport } from "../content/reportTemplates";
-import type { Director } from "./director";
+import { scriptedTalk } from "../content/talkTemplates";
+import type { Director, TalkContext, TalkResult } from "./director";
 
 const ZERO_TENSIONS: Tensions = {
   official_scrutiny: 0,
@@ -69,6 +70,7 @@ export class ScriptedDirector implements Director {
       proseZh: composeProse(scene, state, def.openingHookZh),
       directive: { ...scene.directive, locationId },
       choices: scene.choices,
+      npcLines: scene.npcLines ?? [],
       update: {
         moneyDelta: 0,
         healthDelta: 0,
@@ -150,6 +152,7 @@ export class ScriptedDirector implements Director {
       proseZh: composeProse(scene, state),
       directive: { ...scene.directive, locationId },
       choices: isEnding ? [] : scene.choices,
+      npcLines: scene.npcLines ?? [],
       update,
       eventOps: [],
       timelineEvents: [
@@ -171,6 +174,10 @@ export class ScriptedDirector implements Director {
       isEnding,
       endingReasonZh: isEnding ? endingReason(state) : "",
     };
+  }
+
+  async talk(state: SessionState, ctx: TalkContext): Promise<TalkResult> {
+    return scriptedTalk(state, ctx);
   }
 
   async writeReport(state: SessionState): Promise<LifeReport> {

@@ -51,6 +51,7 @@ export function toSessionView(state: SessionState): SessionView {
     npcs: NPC_IDS.map((id) => {
       const npc = state.npcs[id];
       const lastMemory = npc.memory[npc.memory.length - 1];
+      const inScene = state.scene.directive.focusNpcIds.includes(id);
       return {
         id,
         nameZh: npc.nameZh,
@@ -59,6 +60,8 @@ export function toSessionView(state: SessionState): SessionView {
         glyph: attitudeGlyph(npc.trust, npc.fear, npc.respect),
         lastChangeZh: lastMemory?.summaryZh ?? "",
         changedThisTurn: lastMemory !== undefined && lastMemory.turn === state.turn && state.turn > 0,
+        inScene,
+        canTalk: inScene && !state.talkedNpcIds.includes(id) && !state.finished,
       };
     }),
     scene: state.scene,

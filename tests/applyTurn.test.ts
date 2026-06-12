@@ -1,8 +1,31 @@
 import { describe, expect, it } from "vitest";
-import type { DirectorTurn, SessionState } from "@shared/types";
+import type { Choice, DirectorTurn, SessionState } from "@shared/types";
 import { newSession } from "../server/sim/newSession";
 import { applyDirectorTurn } from "../server/sim/applyTurn";
 import { clampDirectorTurn } from "../server/sim/clamp";
+
+export function mkChoice(
+  id: Choice["id"],
+  labelZh: string,
+  actionTag: Choice["actionTag"],
+  risk: Choice["risk"],
+  extras: Partial<Choice> = {},
+): Choice {
+  return {
+    id,
+    labelZh,
+    hintZh: "",
+    actionTag,
+    risk,
+    anchorNpcId: "",
+    moneyCost: 0,
+    staminaCost: 0,
+    minReputation: -100,
+    minTrustNpcId: "",
+    minTrustTier: "",
+    ...extras,
+  };
+}
 
 function zeroTurn(overrides: Partial<DirectorTurn["update"]> = {}): DirectorTurn {
   return {
@@ -19,10 +42,11 @@ function zeroTurn(overrides: Partial<DirectorTurn["update"]> = {}): DirectorTurn
       focusNpcIds: [],
     },
     choices: [
-      { id: "c1", labelZh: "一", hintZh: "", actionTag: "observe_wait", risk: "low" },
-      { id: "c2", labelZh: "二", hintZh: "", actionTag: "pursue_money", risk: "low" },
-      { id: "c3", labelZh: "三", hintZh: "", actionTag: "take_risk", risk: "high" },
+      mkChoice("c1", "一", "observe_wait", "low"),
+      mkChoice("c2", "二", "pursue_money", "low"),
+      mkChoice("c3", "三", "take_risk", "high"),
     ],
+    npcLines: [],
     update: {
       moneyDelta: 0,
       healthDelta: 0,
@@ -46,7 +70,7 @@ function zeroTurn(overrides: Partial<DirectorTurn["update"]> = {}): DirectorTurn
   };
 }
 
-const chosen = { id: "c1", labelZh: "一", hintZh: "", actionTag: "observe_wait", risk: "low" } as const;
+const chosen = mkChoice("c1", "一", "observe_wait", "low");
 
 function fresh(): SessionState {
   return newSession("scholar", "scripted");

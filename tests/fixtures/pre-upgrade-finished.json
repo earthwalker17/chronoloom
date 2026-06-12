@@ -1,0 +1,701 @@
+{
+  "id": "422b14b5-2bd5-48a6-b612-b7f199e5c1f9",
+  "schemaVersion": 1,
+  "createdAt": "2026-06-10T15:53:03.381Z",
+  "updatedAt": "2026-06-10T15:53:10.947Z",
+  "engine": "claude",
+  "identityId": "copyist",
+  "turn": 10,
+  "chapter": 3,
+  "finished": true,
+  "endingReasonZh": "七日之间，你在东市挣下了一个被人记住的名字。灯落了，路才刚刚铺开。",
+  "player": {
+    "identityId": "copyist",
+    "nameZh": "卫澄心",
+    "age": 19,
+    "money": 300,
+    "health": 66,
+    "reputation": 39,
+    "skills": {
+      "letters": 4,
+      "etiquette": 2,
+      "bargaining": 1,
+      "tongues": 0,
+      "streetwise": 0
+    },
+    "tendencies": {
+      "seek_patronage": 0,
+      "protect_someone": 4,
+      "conceal_info": 0,
+      "reveal_info": 3,
+      "take_risk": 1,
+      "preserve_reputation": 0,
+      "pursue_money": 1,
+      "pursue_status": 0,
+      "pursue_art": 1,
+      "observe_wait": 0
+    },
+    "statuses": [
+      "sheltering_friend"
+    ],
+    "accessTags": [
+      "temple_inner"
+    ],
+    "location": "market_cross"
+  },
+  "world": {
+    "day": 7,
+    "timeOfDay": "night",
+    "weather": "clear",
+    "publicMoodZh": "灯节将近，满市欢腾里藏着一丝不安。",
+    "tensions": {
+      "official_scrutiny": 9,
+      "guild_dispute": 6,
+      "festival_fervor": 7,
+      "street_danger": 4
+    },
+    "rumors": [
+      {
+        "id": "rumor_seed_0",
+        "textZh": "市署要在灯节里查各行的税册，市丞裴衡亲自坐镇。"
+      },
+      {
+        "id": "rumor_seed_1",
+        "textZh": "崔家绢行的账册短了一页，行里人人自危。"
+      },
+      {
+        "id": "rumor_seed_2",
+        "textZh": "沈记书肆十七夜设灯下诗会，听说有贵人微服要来。"
+      },
+      {
+        "id": "rumor_seed_3",
+        "textZh": "波斯邸一笔大货款悬着没结，胡商放话：灯节之内必要个说法。"
+      }
+    ]
+  },
+  "npcs": {
+    "shen_yanqiu": {
+      "id": "shen_yanqiu",
+      "nameZh": "沈砚秋",
+      "roleZh": "书肆主人",
+      "motivationZh": "屡试不第，半生蹉跎。想在闭眼之前，再亲手教出一个成器的人。",
+      "trust": 20,
+      "fear": 5,
+      "respect": 46,
+      "agendaZh": "筹备十七夜的灯下诗会，暗中物色可造之才，也想借诗会探一探市署查账的风向。",
+      "memory": [
+        {
+          "turn": 0,
+          "summaryZh": "他常来寺里求字，夸过你的小楷"
+        },
+        {
+          "turn": 8,
+          "summaryZh": "他说，这一篇他要留在书肆里"
+        }
+      ]
+    },
+    "cui_jiu": {
+      "id": "cui_jiu",
+      "nameZh": "崔九",
+      "roleZh": "崔家绢行学徒",
+      "motivationZh": "出身行内，眼里只有往上爬的梯子。谁挡路，谁就是敌人。",
+      "trust": -51,
+      "fear": 34,
+      "respect": 15,
+      "agendaZh": "账上短了一页，他比谁都急——急着把嫌疑引到别人头上，最好顺手踩死一个对手。",
+      "memory": [
+        {
+          "turn": 10,
+          "summaryZh": "夹道那一夜，他没能讨到便宜"
+        }
+      ]
+    },
+    "lvyao": {
+      "id": "lvyao",
+      "nameZh": "绿腰",
+      "roleZh": "酒肆琵琶女",
+      "motivationZh": "身契押在别人手里，攒钱赎身是唯一的念想。最怕的是被转卖出长安。",
+      "trust": 58,
+      "fear": 30,
+      "respect": 10,
+      "agendaZh": "灯节客多，想多攒些赏钱；又听说身契被卷进了绢行的纠纷，正暗暗打听下落。",
+      "memory": [
+        {
+          "turn": 2,
+          "summaryZh": "众人冷眼时，你肯出头"
+        },
+        {
+          "turn": 6,
+          "summaryZh": "灯夜里满座宾客，只有你站了出来"
+        },
+        {
+          "turn": 7,
+          "summaryZh": "灯夜里满座宾客，只有你站了出来"
+        },
+        {
+          "turn": 9,
+          "summaryZh": "到了最后，你还是把她护在了身后"
+        }
+      ]
+    },
+    "pei_heng": {
+      "id": "pei_heng",
+      "nameZh": "裴衡",
+      "roleZh": "市署市丞",
+      "motivationZh": "明经出身，在市署熬了八年。想借整顿东市做出政绩，迁官出去。疑心极重。",
+      "trust": 20,
+      "fear": 0,
+      "respect": 36,
+      "agendaZh": "奉命在灯节期间核查东市税册，已盯上绢行的账。要在十九日前揪出做假账的人。",
+      "memory": [
+        {
+          "turn": 0,
+          "summaryZh": "他敬重寺院的体面"
+        },
+        {
+          "turn": 3,
+          "summaryZh": "此人肯当众说实话"
+        },
+        {
+          "turn": 4,
+          "summaryZh": "三番两次肯对官府交底，难得"
+        },
+        {
+          "turn": 5,
+          "summaryZh": "三番两次肯对官府交底，难得"
+        }
+      ]
+    },
+    "he_shisan": {
+      "id": "he_shisan",
+      "nameZh": "何十三娘",
+      "roleZh": "酒肆主人",
+      "motivationZh": "寡居多年撑起酒肆。她要让这间酒肆成为谁都需要、谁也不敢得罪的地方。",
+      "trust": 14,
+      "fear": 5,
+      "respect": 30,
+      "agendaZh": "各方的消息都往她耳朵里钻。她在掂量这次查账风波里，哪一边的人情卖出去最值钱。",
+      "memory": []
+    }
+  },
+  "eventQueue": [
+    {
+      "id": "seed_ledger_rumor",
+      "hintZh": "捎话的人又来了：那页'要紧的账'，愿出重金藏进经卷。",
+      "dueTurn": 2,
+      "status": "fired",
+      "source": "seed"
+    },
+    {
+      "id": "seed_audit_notice",
+      "hintZh": "市署在市楼张榜：灯节期间核查各行税册，市丞裴衡亲自坐镇。",
+      "dueTurn": 3,
+      "status": "fired",
+      "source": "seed"
+    },
+    {
+      "id": "seed_audit_personal",
+      "hintZh": "查账的目光落到了你身上——裴衡的人点名要问你的话。",
+      "dueTurn": 4,
+      "status": "fired",
+      "source": "seed"
+    },
+    {
+      "id": "seed_lvyao_crisis",
+      "hintZh": "绿腰的身契被人当作绢行纠纷的抵押要走了——她今夜可能被带离酒肆。",
+      "dueTurn": 6,
+      "status": "fired",
+      "source": "seed"
+    },
+    {
+      "id": "seed_poetry_night",
+      "hintZh": "沈砚秋的灯下诗会就在今夜，各方人物都会到场。",
+      "dueTurn": 7,
+      "status": "fired",
+      "source": "seed"
+    },
+    {
+      "id": "seed_harvest",
+      "hintZh": "灯节将尽，你此前的所作所为开始结出果实——该来的人和事都找上门了。",
+      "dueTurn": 8,
+      "status": "fired",
+      "source": "seed"
+    },
+    {
+      "id": "seed_finale",
+      "hintZh": "正月十九，收灯。失账风波必须在今日了结，每个人都要付出代价或得到报偿。",
+      "dueTurn": 10,
+      "status": "fired",
+      "source": "seed"
+    }
+  ],
+  "timeline": [
+    {
+      "id": "tl_0_0",
+      "turn": 0,
+      "day": 1,
+      "kind": "milestone",
+      "titleZh": "初入灯市",
+      "descZh": "正月十三，你以抄经生之身踏进了上元灯节的东市。",
+      "importance": 2,
+      "npcIds": [],
+      "locationId": "temple_hall"
+    },
+    {
+      "id": "tl_1_0",
+      "turn": 1,
+      "day": 2,
+      "kind": "decision",
+      "titleZh": "攒下铜钱",
+      "descZh": "灯节的市口好，你埋头做事，攒下了一小笔。",
+      "importance": 1,
+      "npcIds": [
+        "cui_jiu"
+      ],
+      "locationId": "temple_hall"
+    },
+    {
+      "id": "tl_2_0",
+      "turn": 2,
+      "day": 2,
+      "kind": "relationship",
+      "titleZh": "出头之恩",
+      "descZh": "你在人前替弱者撑了一回腰，市井都看在眼里。",
+      "importance": 2,
+      "npcIds": [
+        "lvyao",
+        "cui_jiu"
+      ],
+      "locationId": "market_cross"
+    },
+    {
+      "id": "tl_3_0",
+      "turn": 3,
+      "day": 2,
+      "kind": "decision",
+      "titleZh": "当众挑明",
+      "descZh": "你把知道的事说了出来，市楼下一片哗然。",
+      "importance": 2,
+      "npcIds": [
+        "pei_heng",
+        "cui_jiu"
+      ],
+      "locationId": "wine_house"
+    },
+    {
+      "id": "tl_4_0",
+      "turn": 4,
+      "day": 3,
+      "kind": "consequence",
+      "titleZh": "向官府交底",
+      "descZh": "你把掌握的情形报给了市署，查账的方向因你而变。",
+      "importance": 2,
+      "npcIds": [
+        "pei_heng",
+        "cui_jiu"
+      ],
+      "locationId": "market_cross"
+    },
+    {
+      "id": "tl_5_0",
+      "turn": 5,
+      "day": 4,
+      "kind": "consequence",
+      "titleZh": "向官府交底",
+      "descZh": "你把掌握的情形报给了市署，查账的方向因你而变。",
+      "importance": 2,
+      "npcIds": [
+        "pei_heng",
+        "cui_jiu"
+      ],
+      "locationId": "market_cross"
+    },
+    {
+      "id": "tl_6_0",
+      "turn": 6,
+      "day": 4,
+      "kind": "relationship",
+      "titleZh": "灯下托付",
+      "descZh": "你在满城灯火里护住了一个走投无路的人。",
+      "importance": 3,
+      "npcIds": [
+        "lvyao",
+        "he_shisan"
+      ],
+      "locationId": "temple_hall"
+    },
+    {
+      "id": "tl_7_0",
+      "turn": 7,
+      "day": 5,
+      "kind": "relationship",
+      "titleZh": "灯下托付",
+      "descZh": "你在满城灯火里护住了一个走投无路的人。",
+      "importance": 3,
+      "npcIds": [
+        "lvyao",
+        "he_shisan"
+      ],
+      "locationId": "wine_house"
+    },
+    {
+      "id": "tl_8_0",
+      "turn": 8,
+      "day": 6,
+      "kind": "milestone",
+      "titleZh": "收灯之作",
+      "descZh": "你以一篇文字收束七日灯火，懂的人都说写尽了这一市悲欢。",
+      "importance": 3,
+      "npcIds": [
+        "shen_yanqiu"
+      ],
+      "locationId": "bookshop"
+    },
+    {
+      "id": "tl_9_0",
+      "turn": 9,
+      "day": 6,
+      "kind": "relationship",
+      "titleZh": "以身相护",
+      "descZh": "灯落之际，你拿自己的前程与钱财换了别人的安身。",
+      "importance": 3,
+      "npcIds": [
+        "lvyao",
+        "pei_heng"
+      ],
+      "locationId": "market_cross"
+    },
+    {
+      "id": "tl_10_0",
+      "turn": 10,
+      "day": 7,
+      "kind": "decision",
+      "titleZh": "孤注一掷",
+      "descZh": "你只身赴了那场暗巷之约，赢下了最大的一注。",
+      "importance": 3,
+      "npcIds": [
+        "cui_jiu",
+        "he_shisan"
+      ],
+      "locationId": "gate_lane"
+    }
+  ],
+  "ledger": [
+    {
+      "id": "cl_0_0",
+      "turn": 0,
+      "cause": "world_event",
+      "textZh": "上元灯节开市，七日灯火点亮了长安东市。",
+      "effectsZh": [
+        "你的故事从这里开始"
+      ],
+      "openedZh": [
+        "灯节七日的机会与风险"
+      ],
+      "closedZh": []
+    },
+    {
+      "id": "cl_1_0",
+      "turn": 1,
+      "cause": "player_action",
+      "textZh": "你把心思放在了生计上。",
+      "effectsZh": [
+        "进账一百五十文上下"
+      ],
+      "openedZh": [],
+      "closedZh": []
+    },
+    {
+      "id": "cl_2_0",
+      "turn": 2,
+      "cause": "player_action",
+      "textZh": "你出手相护，善名传开，也挡了某些人的路。",
+      "effectsZh": [
+        "绿腰记下了这份情",
+        "崔九觉得你碍事"
+      ],
+      "openedZh": [
+        "弱者的信任"
+      ],
+      "closedZh": []
+    },
+    {
+      "id": "cl_3_0",
+      "turn": 3,
+      "cause": "player_action",
+      "textZh": "你把话挑明，官府记住了你的坦白，对头记住了你的多嘴。",
+      "effectsZh": [
+        "裴衡对你的话上了心",
+        "崔九视你为眼中钉"
+      ],
+      "openedZh": [
+        "官面上的信用"
+      ],
+      "closedZh": []
+    },
+    {
+      "id": "cl_4_0",
+      "turn": 4,
+      "cause": "player_action",
+      "textZh": "你的话改变了官府查账的方向。",
+      "effectsZh": [
+        "裴衡把你当成了可用的耳目",
+        "绢行有人恨你入骨"
+      ],
+      "openedZh": [
+        "官府的庇护"
+      ],
+      "closedZh": [
+        "与崔九转圜的余地"
+      ]
+    },
+    {
+      "id": "cl_5_0",
+      "turn": 5,
+      "cause": "player_action",
+      "textZh": "你的话改变了官府查账的方向。",
+      "effectsZh": [
+        "裴衡把你当成了可用的耳目",
+        "绢行有人恨你入骨"
+      ],
+      "openedZh": [
+        "官府的庇护"
+      ],
+      "closedZh": [
+        "与崔九转圜的余地"
+      ]
+    },
+    {
+      "id": "cl_6_0",
+      "turn": 6,
+      "cause": "player_action",
+      "textZh": "你把别人的难处接到了自己肩上。",
+      "effectsZh": [
+        "绿腰把后半生的指望放在了你身上",
+        "官府觉得你多管闲事"
+      ],
+      "openedZh": [
+        "一份以命相托的信任"
+      ],
+      "closedZh": [
+        "独善其身的余地"
+      ]
+    },
+    {
+      "id": "cl_7_0",
+      "turn": 7,
+      "cause": "player_action",
+      "textZh": "你把别人的难处接到了自己肩上。",
+      "effectsZh": [
+        "绿腰把后半生的指望放在了你身上",
+        "官府觉得你多管闲事"
+      ],
+      "openedZh": [
+        "一份以命相托的信任"
+      ],
+      "closedZh": [
+        "独善其身的余地"
+      ]
+    },
+    {
+      "id": "cl_8_0",
+      "turn": 8,
+      "cause": "player_action",
+      "textZh": "你把这七日活成了一篇文章。",
+      "effectsZh": [
+        "文字传出了东市"
+      ],
+      "openedZh": [
+        "留名的可能"
+      ],
+      "closedZh": []
+    },
+    {
+      "id": "cl_9_0",
+      "turn": 9,
+      "cause": "player_action",
+      "textZh": "你最后的筹码花在了别人身上。",
+      "effectsZh": [
+        "绿腰的身契赎了出来",
+        "你自己的路窄了一截"
+      ],
+      "openedZh": [
+        "一生一诺的情义"
+      ],
+      "closedZh": [
+        "独占的好处"
+      ]
+    },
+    {
+      "id": "cl_10_0",
+      "turn": 10,
+      "cause": "player_action",
+      "textZh": "你把性命押上了桌面。",
+      "effectsZh": [
+        "得了大注的钱财",
+        "落下了不轻的伤"
+      ],
+      "openedZh": [],
+      "closedZh": [
+        "回头的路"
+      ]
+    }
+  ],
+  "scene": {
+    "titleZh": "灯落之时",
+    "consequenceRecapZh": "你昨日行的险棋有了动静：进账300文，身上添了伤病，崔九对你冷了几分。",
+    "proseZh": "正月十九，收灯。匠人们把灯轮一盏一盏摘下来，东市恢复了平日的鼓声与钲声。失账一案尘埃落定，七日灯火里你走过的每一步，都已刻进这座市的人情账册。灯会散了，长安还长——而你已经不是七日前走进灯市的那个人。\n裴衡看你的眼神，已不似先前那般冷。\n绿腰远远望见你，眼里有了依靠之色。",
+    "directive": {
+      "locationId": "market_cross",
+      "timeOfDay": "night",
+      "weather": "clear",
+      "mood": "melancholy",
+      "crowd": "sparse",
+      "lanterns": "dim",
+      "focusNpcIds": []
+    },
+    "choices": []
+  },
+  "history": [
+    {
+      "turn": 1,
+      "choiceId": "c1",
+      "labelZh": "专心本业，先把眼前的活计做好",
+      "actionTag": "pursue_money",
+      "engineUsed": "scripted-fallback"
+    },
+    {
+      "turn": 2,
+      "choiceId": "c2",
+      "labelZh": "替被喝斥的摊贩说句公道话",
+      "actionTag": "protect_someone",
+      "engineUsed": "scripted-fallback"
+    },
+    {
+      "turn": 3,
+      "choiceId": "c1",
+      "labelZh": "与崔九当面对质，把话挑开",
+      "actionTag": "reveal_info",
+      "engineUsed": "scripted-fallback"
+    },
+    {
+      "turn": 4,
+      "choiceId": "c1",
+      "labelZh": "当场回敬，叫他把话说明白",
+      "actionTag": "reveal_info",
+      "engineUsed": "scripted-fallback"
+    },
+    {
+      "turn": 5,
+      "choiceId": "c1",
+      "labelZh": "据实以告，连对自己不利的也不瞒",
+      "actionTag": "reveal_info",
+      "engineUsed": "scripted-fallback"
+    },
+    {
+      "turn": 6,
+      "choiceId": "c3",
+      "labelZh": "帮绿腰多攒些赎身的赏钱",
+      "actionTag": "protect_someone",
+      "engineUsed": "scripted-fallback"
+    },
+    {
+      "turn": 7,
+      "choiceId": "c1",
+      "labelZh": "倾囊相助，替她把这笔押钱垫上",
+      "actionTag": "protect_someone",
+      "engineUsed": "scripted-fallback"
+    },
+    {
+      "turn": 8,
+      "choiceId": "c1",
+      "labelZh": "献上一首用心之作",
+      "actionTag": "pursue_art",
+      "engineUsed": "scripted-fallback"
+    },
+    {
+      "turn": 9,
+      "choiceId": "c4",
+      "labelZh": "先把绿腰和身边的人护周全",
+      "actionTag": "protect_someone",
+      "engineUsed": "scripted-fallback"
+    },
+    {
+      "turn": 10,
+      "choiceId": "c1",
+      "labelZh": "赴约，亲手了断这件事",
+      "actionTag": "take_risk",
+      "engineUsed": "scripted-fallback"
+    }
+  ],
+  "validationLog": [],
+  "report": {
+    "lifeTitleZh": "仗义经生",
+    "epithetZh": "灯下护人者",
+    "arcSummaryZh": "天宝三载上元，你以抄经生之身在长安东市过了7日。失账风波卷过每一个人，你灯下护人者，你的名字在东市有了分量，囊中比来时厚了200文。这七日里最深的牵绊，落在绿腰身上。",
+    "turningPoints": [
+      {
+        "timelineId": "tl_6_0",
+        "titleZh": "灯下托付",
+        "whyZh": "一段人情自此不同，它改变了你在这座市里的位置。"
+      },
+      {
+        "timelineId": "tl_7_0",
+        "titleZh": "灯下托付",
+        "whyZh": "一段人情自此不同，它改变了你在这座市里的位置。"
+      },
+      {
+        "timelineId": "tl_8_0",
+        "titleZh": "收灯之作",
+        "whyZh": "你的长安岁月，在这里划下了一道刻痕。"
+      },
+      {
+        "timelineId": "tl_9_0",
+        "titleZh": "以身相护",
+        "whyZh": "一段人情自此不同，它改变了你在这座市里的位置。"
+      }
+    ],
+    "relationships": [
+      {
+        "npcId": "lvyao",
+        "arcZh": "绿腰从陌生到相托，这七日里你们之间结下的，已经不是寻常交情。",
+        "finalStanding": "devoted"
+      },
+      {
+        "npcId": "cui_jiu",
+        "arcZh": "你与崔九走到了水火不容的地步，灯节里的恩怨，怕是要记很多年。",
+        "finalStanding": "severed"
+      },
+      {
+        "npcId": "pei_heng",
+        "arcZh": "裴衡待你日渐亲厚，几次关口上都念着你的好。",
+        "finalStanding": "warm"
+      },
+      {
+        "npcId": "he_shisan",
+        "arcZh": "何十三娘待你日渐亲厚，几次关口上都念着你的好。",
+        "finalStanding": "wary"
+      }
+    ],
+    "valuesRevealedZh": [
+      "重义",
+      "直言",
+      "敢为",
+      "务实"
+    ],
+    "protectedZh": "你护住了想护的人——哪怕代价不小。",
+    "sacrificedZh": "为此你舍了钱财，也舍了独善其身的轻省。",
+    "roadNotTakenZh": "若当初袖手旁观，你的囊中会更满，心里会更空。",
+    "closingLetterZh": "致另一个世界的你：上元的灯我替你看过了。我护住了想护的人——哪怕代价不小。为此我舍了钱财，也舍了独善其身的轻省。若你也站在那年正月的市楼下，未必会走我这条路——可灯落的时候，我没有后悔。",
+    "shareCard": {
+      "headlineZh": "仗义经生",
+      "sublineZh": "长安上元 · 七日 · 灯下护人者",
+      "statHighlightsZh": [
+        "银钱 300 文（+200）",
+        "你的名字在东市有了分量",
+        "最深羁绊 · 绿腰"
+      ],
+      "sealZh": "长安浮生"
+    }
+  }
+}

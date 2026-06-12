@@ -12,7 +12,9 @@ import {
   ACTION_TAGS,
   CHOICE_IDS,
   CROWD_LEVELS,
+  ENGINE_IDS,
   FINAL_STANDINGS,
+  GATE_TIERS,
   IDENTITY_IDS,
   LANTERN_LEVELS,
   LOCATION_IDS,
@@ -50,6 +52,9 @@ export const RiskLevelSchema = z.enum(RISK_LEVELS);
 export const TimelineKindSchema = z.enum(TIMELINE_KINDS);
 export const FinalStandingSchema = z.enum(FINAL_STANDINGS);
 export const ChoiceIdSchema = z.enum(CHOICE_IDS);
+export const EngineIdSchema = z.enum(ENGINE_IDS);
+/** "" = no trust gate on this choice. */
+export const GateTierSchema = z.enum(["", ...GATE_TIERS]);
 
 // Fixed-key numeric maps (structured-output safe; no z.record anywhere).
 export const SkillsSchema = z.object({
@@ -101,6 +106,24 @@ export const ChoiceSchema = z.object({
   hintZh: z.string(),
   actionTag: ActionTagSchema,
   risk: RiskLevelSchema,
+  /**
+   * Scene anchor: clicking this NPC's figure selects this choice.
+   * "" = not anchored. Must be one of directive.focusNpcIds (clamp-enforced).
+   */
+  anchorNpcId: z.union([NpcIdSchema, z.literal("")]),
+  /** Costs deducted on pick, BEFORE outcome deltas. 0 = free. */
+  moneyCost: z.number(),
+  staminaCost: z.number(),
+  /** Gates: choice is locked (visible, unpickable) unless met. -100 / "" = no gate. */
+  minReputation: z.number(),
+  minTrustNpcId: z.union([NpcIdSchema, z.literal("")]),
+  minTrustTier: GateTierSchema,
+});
+
+/** In-scene speech bubble line attached to a focus NPC's figure. */
+export const NpcLineSchema = z.object({
+  npcId: NpcIdSchema,
+  lineZh: z.string(),
 });
 
 // ---------------------------------------------------------------------------
@@ -147,6 +170,8 @@ export const NpcStateSchema = z.object({
   /** Hidden, mutable. */
   agendaZh: z.string(),
   memory: z.array(NpcMemorySchema),
+  /** Disclosure ids already surfaced through 攀谈 — never re-revealed. */
+  revealed: z.array(z.string()),
 });
 
 export const QueuedEventSchema = z.object({
@@ -243,6 +268,8 @@ export const DirectorTurnSchema = z.object({
   proseZh: z.string(),
   directive: SceneDirectiveSchema,
   choices: z.array(ChoiceSchema),
+  /** In-scene speech bubbles (≤3, focus NPCs only — clamp-enforced). */
+  npcLines: z.array(NpcLineSchema),
   update: TurnUpdateSchema,
   eventOps: z.array(EventOpSchema),
   timelineEvents: z.array(NewTimelineEventSchema),
@@ -267,6 +294,14 @@ export const WireChoiceSchema = z.object({
   hintZh: z.string(),
   actionTag: ActionTagSchema,
   risk: RiskLevelSchema,
+  // Costs/gates/anchor relaxed to plain primitives (grammar-cheap);
+  // wire.ts validates ids/tiers, clamp.ts bounds the numbers.
+  anchorNpcId: z.string(),
+  moneyCost: z.number(),
+  staminaCost: z.number(),
+  minReputation: z.number(),
+  minTrustNpcId: z.string(),
+  minTrustTier: z.string(),
 });
 
 export const WireNpcUpdateSchema = z.object({
@@ -292,6 +327,7 @@ export const DirectorTurnWireSchema = z.object({
     focusNpcIds: z.array(z.string()),
   }),
   choices: z.array(WireChoiceSchema),
+  npcLines: z.array(z.object({ npcId: z.string(), lineZh: z.string() })),
   update: z.object({
     moneyDelta: z.number(),
     healthDelta: z.number(),
@@ -329,6 +365,33 @@ export const DirectorTurnWireSchema = z.object({
 });
 
 // ---------------------------------------------------------------------------
+// 攀谈 (talk) — bounded sub-turn micro-dialogue with one NPC
+// ---------------------------------------------------------------------------
+
+/**
+ * What the engine returns for a talk exchange (wire-safe: primitives only).
+ * The route clamps trustDelta to ±CAPS.talkTrustClamp and blanks revealZh
+ * unless it matches a disclosure the player's trust tier has earned.
+ */
+export const TalkExchangeWireSchema = z.object({
+  /** The NPC's spoken line, in their persona voice. ≤60 chars (clamped). */
+  lineZh: z.string(),
+  /** Optional second beat; "" = single-line exchange. */
+  followUpZh: z.string(),
+  /** A hint/secret surfaced this exchange; "" = nothing revealed. */
+  revealZh: z.string(),
+  trustDelta: z.number(),
+  /** What the NPC will remember of this exchange; "" = nothing. ≤80 chars. */
+  memoryZh: z.string(),
+});
+
+export const TalkBodySchema = z.object({
+  npcId: NpcIdSchema,
+  /** Turn the client believes it is on; mismatch → 409. */
+  turn: z.number(),
+});
+
+// ---------------------------------------------------------------------------
 // Life report
 // ---------------------------------------------------------------------------
 
@@ -352,6 +415,25 @@ export const ShareCardSchema = z.object({
   sealZh: z.string(),
 });
 
+/** One observed theme about the real player, tied to concrete lived evidence. */
+export const MirrorThemeSchema = z.object({
+  observationZh: z.string(),
+  /** Must cite actual choices/moments from the life; guarded non-empty. */
+  evidenceZh: z.string(),
+});
+
+/**
+ * 镜中人 — what this life may reveal about the real player. Warm, specific,
+ * evidence-grounded; never personality-test labels, never preachy.
+ */
+export const MirrorSchema = z.object({
+  decisionStyleZh: z.string(),
+  themes: z.array(MirrorThemeSchema),
+  innerTensionZh: z.string(),
+  gentleAdviceZh: z.string(),
+  blessingZh: z.string(),
+});
+
 export const LifeReportSchema = z.object({
   lifeTitleZh: z.string(),
   epithetZh: z.string(),
@@ -363,6 +445,7 @@ export const LifeReportSchema = z.object({
   sacrificedZh: z.string(),
   roadNotTakenZh: z.string(),
   closingLetterZh: z.string(),
+  mirror: MirrorSchema,
   shareCard: ShareCardSchema,
 });
 
@@ -376,6 +459,7 @@ export const SceneSchema = z.object({
   proseZh: z.string(),
   directive: SceneDirectiveSchema,
   choices: z.array(ChoiceSchema),
+  npcLines: z.array(NpcLineSchema),
 });
 
 export const HistoryEntrySchema = z.object({
@@ -391,7 +475,7 @@ export const SessionStateSchema = z.object({
   schemaVersion: z.literal(1),
   createdAt: z.string(),
   updatedAt: z.string(),
-  engine: z.enum(["claude", "scripted"]),
+  engine: EngineIdSchema,
   identityId: IdentityIdSchema,
   turn: z.number(),
   chapter: z.union([z.literal(1), z.literal(2), z.literal(3)]),
@@ -411,6 +495,8 @@ export const SessionStateSchema = z.object({
   ledger: z.array(CausalEntrySchema),
   scene: SceneSchema,
   history: z.array(HistoryEntrySchema),
+  /** NPCs already talked-to this turn (sub-turn fence); reset each applied turn. */
+  talkedNpcIds: z.array(NpcIdSchema),
   validationLog: z.array(z.string()),
   report: LifeReportSchema.nullable(),
 });
@@ -422,6 +508,8 @@ export const SessionStateSchema = z.object({
 export const CreateSessionBodySchema = z.object({
   identityId: IdentityIdSchema,
   playerNameZh: z.string().optional(),
+  /** Engine to pin this session to; omitted = server default. */
+  provider: EngineIdSchema.optional(),
 });
 
 export const TurnBodySchema = z.object({
@@ -440,11 +528,27 @@ export const NpcViewSchema = z.object({
   /** Most recent relationship change line; "" if unchanged. */
   lastChangeZh: z.string(),
   changedThisTurn: z.boolean(),
+  /** Present in the current scene (∈ directive.focusNpcIds). */
+  inScene: z.boolean(),
+  /** 攀谈 available right now (in scene, not yet talked-to this turn). */
+  canTalk: z.boolean(),
+});
+
+/** Result of POST /sessions/:id/talk — raw trust never leaves the server. */
+export const TalkResponseSchema = z.object({
+  npcId: NpcIdSchema,
+  /** 1–2 spoken lines (followUp folded in as a second line). */
+  lines: z.array(NpcLineSchema),
+  /** "" = nothing revealed this exchange. */
+  revealZh: z.string(),
+  attitude: z.enum(["warmer", "cooler", "unchanged"]),
+  npc: NpcViewSchema,
+  turn: z.number(),
 });
 
 export const SessionViewSchema = z.object({
   id: z.string(),
-  engine: z.enum(["claude", "scripted"]),
+  engine: EngineIdSchema,
   identityId: IdentityIdSchema,
   turn: z.number(),
   chapter: z.union([z.literal(1), z.literal(2), z.literal(3)]),
@@ -494,4 +598,20 @@ export const MetaResponseSchema = z.object({
     rumorsZh: z.array(z.string()),
   }),
   identities: z.array(IdentityCardSchema),
+});
+
+/** One selectable engine on the landing page (unavailable = visible, disabled). */
+export const ProviderInfoSchema = z.object({
+  id: EngineIdSchema,
+  labelZh: z.string(),
+  available: z.boolean(),
+  /** Model id when configured; null for scripted/unavailable. */
+  model: z.string().nullable(),
+});
+
+export const HealthResponseSchema = z.object({
+  ok: z.boolean(),
+  engine: EngineIdSchema,
+  model: z.string().nullable(),
+  providers: z.array(ProviderInfoSchema),
 });

@@ -153,6 +153,10 @@ export const FINAL_STANDING_ZH: Record<FinalStanding, string> = {
 export const CHOICE_IDS = ["c1", "c2", "c3", "c4"] as const;
 export type ChoiceId = (typeof CHOICE_IDS)[number];
 
+/** Engines a session can be pinned to ("scripted" = offline deterministic). */
+export const ENGINE_IDS = ["claude", "openai", "deepseek", "scripted"] as const;
+export type EngineId = (typeof ENGINE_IDS)[number];
+
 // ---------------------------------------------------------------------------
 // Clamp tables (enforced in server/sim/clamp.ts, never in JSON Schema)
 // ---------------------------------------------------------------------------
@@ -193,6 +197,19 @@ export const CAPS = {
   dueTurnOffsetMax: 5,
   focusNpcsMax: 3,
   valuesRevealedMax: 4,
+  /** In-scene speech bubbles per turn. */
+  npcLinesMax: 3,
+  npcLineMaxChars: 40,
+  /** 攀谈 micro-interaction bounds (sub-turn, once per NPC per turn). */
+  talkTrustClamp: 3,
+  talkLineMaxChars: 60,
+  /** Choice cost ceilings (model-priced, clamp-enforced). */
+  moneyCostMax: 2000,
+  staminaCostMax: 20,
+  /** The affordability floor: this many choices must always remain pickable. */
+  minAffordableChoices: 2,
+  /** Mirror (镜中人) section bounds. */
+  mirrorThemesMax: 3,
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -249,6 +266,19 @@ export function trustTier(trust: number): TrustTier {
   if (trust >= -15) return "相识";
   return "冷淡";
 }
+
+/** Choice gates compare tiers by rank; "" = no gate. */
+export const TIER_RANK: Record<"" | TrustTier, number> = {
+  "": 0,
+  冷淡: 0,
+  相识: 1,
+  信任: 2,
+  莫逆: 3,
+};
+
+/** Tiers usable as a choice gate (gating on 冷淡 would be a no-op). */
+export const GATE_TIERS = ["相识", "信任", "莫逆"] as const;
+export type GateTier = (typeof GATE_TIERS)[number];
 
 export type AttitudeGlyph = "亲" | "敬" | "疑" | "敌";
 

@@ -6,16 +6,21 @@ import type {
   CreateSessionBodySchema,
   DirectorTurnSchema,
   EventOpSchema,
+  HealthResponseSchema,
   HistoryEntrySchema,
   IdentityCardSchema,
   LifeReportSchema,
   MetaResponseSchema,
+  MirrorSchema,
+  MirrorThemeSchema,
   NewCausalEntrySchema,
   NewTimelineEventSchema,
+  NpcLineSchema,
   NpcStateSchema,
   NpcUpdateSchema,
   NpcViewSchema,
   PlayerStateSchema,
+  ProviderInfoSchema,
   QueuedEventSchema,
   RumorSchema,
   SceneDirectiveSchema,
@@ -24,6 +29,9 @@ import type {
   SessionViewSchema,
   ShareCardSchema,
   SkillsSchema,
+  TalkBodySchema,
+  TalkExchangeWireSchema,
+  TalkResponseSchema,
   TendenciesSchema,
   TensionsSchema,
   TimelineEventSchema,
@@ -61,3 +69,11 @@ export type NpcView = z.infer<typeof NpcViewSchema>;
 export type SessionView = z.infer<typeof SessionViewSchema>;
 export type IdentityCard = z.infer<typeof IdentityCardSchema>;
 export type MetaResponse = z.infer<typeof MetaResponseSchema>;
+export type NpcLine = z.infer<typeof NpcLineSchema>;
+export type TalkBody = z.infer<typeof TalkBodySchema>;
+export type TalkExchangeWire = z.infer<typeof TalkExchangeWireSchema>;
+export type TalkResponse = z.infer<typeof TalkResponseSchema>;
+export type Mirror = z.infer<typeof MirrorSchema>;
+export type MirrorTheme = z.infer<typeof MirrorThemeSchema>;
+export type ProviderInfo = z.infer<typeof ProviderInfoSchema>;
+export type HealthResponse = z.infer<typeof HealthResponseSchema>;

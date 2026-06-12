@@ -5,10 +5,13 @@
 import {
   ABS_RANGES,
   CAPS,
+  GATE_TIERS,
   NPC_IDS,
   PER_TURN_CLAMPS,
   TENSION_IDS,
+  TIER_RANK,
   chapterForTurn,
+  trustTier,
   type NpcId,
 } from "@shared/constants";
 import type { Choice, DirectorTurn, NpcUpdate, SessionState } from "@shared/types";
@@ -21,8 +24,85 @@ export interface ClampResult {
 
 const clampNum = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
 
+/** What affordability is judged against (current or projected player state). */
+export interface AffordSnapshot {
+  money: number;
+  health: number;
+  reputation: number;
+  trustOf: (npcId: NpcId) => number;
+}
+
+export function snapshotOf(state: SessionState): AffordSnapshot {
+  return {
+    money: state.player.money,
+    health: state.player.health,
+    reputation: state.player.reputation,
+    trustOf: (id) => state.npcs[id].trust,
+  };
+}
+
+/**
+ * Can the player pick this choice right now?
+ * `health > staminaCost` (strict) — low 体力 locks exertion and stamina can
+ * never kill through a choice cost.
+ */
+export function affordableChoice(c: Choice, s: AffordSnapshot): boolean {
+  if (s.money < c.moneyCost) return false;
+  if (s.health <= c.staminaCost && c.staminaCost > 0) return false;
+  if (s.reputation < c.minReputation) return false;
+  if (c.minTrustNpcId !== "" && c.minTrustTier !== "") {
+    if (TIER_RANK[trustTier(s.trustOf(c.minTrustNpcId))] < TIER_RANK[c.minTrustTier]) return false;
+  }
+  return true;
+}
+
+/** Human reason a choice is locked ("" = affordable). Used by the 422 path. */
+export function lockReason(c: Choice, s: AffordSnapshot): string {
+  if (s.money < c.moneyCost) return "盘缠不够";
+  if (s.health <= c.staminaCost && c.staminaCost > 0) return "体力不支";
+  if (s.reputation < c.minReputation) return "声望不足";
+  if (c.minTrustNpcId !== "" && c.minTrustTier !== "") {
+    if (TIER_RANK[trustTier(s.trustOf(c.minTrustNpcId))] < TIER_RANK[c.minTrustTier])
+      return "交情未到";
+  }
+  return "";
+}
+
+/**
+ * Guarantee ≥CAPS.minAffordableChoices pickable choices: walking from the last
+ * choice, strip costs/gates off unaffordable ones until the floor holds.
+ * Mutates `choices`; returns true if anything changed.
+ */
+export function enforceAffordabilityFloor(
+  choices: Choice[],
+  s: AffordSnapshot,
+  note: (msg: string) => void,
+): boolean {
+  let changed = false;
+  let affordable = choices.filter((c) => affordableChoice(c, s)).length;
+  const target = Math.min(CAPS.minAffordableChoices, choices.length);
+  for (let i = choices.length - 1; i >= 0 && affordable < target; i--) {
+    const c = choices[i];
+    if (!c || affordableChoice(c, s)) continue;
+    c.moneyCost = 0;
+    c.staminaCost = 0;
+    c.minReputation = -100;
+    c.minTrustNpcId = "";
+    c.minTrustTier = "";
+    affordable++;
+    changed = true;
+    note(`choice ${c.id} costs cleared (affordability floor)`);
+  }
+  return changed;
+}
+
 /** Sanitize a DirectorTurn against the current state. Pure. */
-export function clampDirectorTurn(raw: DirectorTurn, state: SessionState, isArrival: boolean): ClampResult {
+export function clampDirectorTurn(
+  raw: DirectorTurn,
+  state: SessionState,
+  isArrival: boolean,
+  chosen: Choice | null = null,
+): ClampResult {
   const log: string[] = [];
   const note = (msg: string) => log.push(msg);
   const t: DirectorTurn = JSON.parse(JSON.stringify(raw));
@@ -184,6 +264,21 @@ export function clampDirectorTurn(raw: DirectorTurn, state: SessionState, isArri
   // --- directive sanity ---
   t.directive.focusNpcIds = [...new Set(t.directive.focusNpcIds)].slice(0, CAPS.focusNpcsMax);
 
+  // --- npcLines: focus NPCs only, capped count and length ---
+  const focusSet = new Set(t.directive.focusNpcIds);
+  const droppedLines = t.npcLines.filter((l) => !focusSet.has(l.npcId)).length;
+  if (droppedLines > 0) note(`${droppedLines} npcLine(s) for non-focus npcs dropped`);
+  t.npcLines = t.npcLines
+    .filter((l) => focusSet.has(l.npcId))
+    .slice(0, CAPS.npcLinesMax)
+    .map((l) => {
+      if (l.lineZh.length > CAPS.npcLineMaxChars) {
+        note(`npcLine for ${l.npcId} truncated to ${CAPS.npcLineMaxChars} chars`);
+        return { ...l, lineZh: l.lineZh.slice(0, CAPS.npcLineMaxChars) };
+      }
+      return l;
+    });
+
   // --- ending rules ---
   const chapter = chapterForTurn(newTurn);
   if (t.isEnding && chapter !== 3) {
@@ -206,9 +301,18 @@ export function clampDirectorTurn(raw: DirectorTurn, state: SessionState, isArri
       choices = choices.slice(0, CAPS.choicesMax);
       note("choices trimmed to 4");
     }
+    // Fillers are always free and ungated — they make the affordability floor terminate.
+    const NO_COSTS = {
+      anchorNpcId: "" as const,
+      moneyCost: 0,
+      staminaCost: 0,
+      minReputation: -100,
+      minTrustNpcId: "" as const,
+      minTrustTier: "" as const,
+    };
     const fillers: Choice[] = [
-      { id: "c3", labelZh: "静观其变，先看清局势", hintZh: "不出手，也是一种选择", actionTag: "observe_wait", risk: "low" },
-      { id: "c4", labelZh: "去何家酒肆探听风声", hintZh: "消息比铜钱值钱", actionTag: "seek_patronage", risk: "low" },
+      { id: "c3", labelZh: "静观其变，先看清局势", hintZh: "不出手，也是一种选择", actionTag: "observe_wait", risk: "low", ...NO_COSTS },
+      { id: "c4", labelZh: "去何家酒肆探听风声", hintZh: "消息比铜钱值钱", actionTag: "seek_patronage", risk: "low", ...NO_COSTS },
     ];
     for (const filler of fillers) {
       if (choices.length >= CAPS.choicesMin) break;
@@ -228,6 +332,61 @@ export function clampDirectorTurn(raw: DirectorTurn, state: SessionState, isArri
         }
       }
     }
+
+    // --- costs / gates / anchors (scripted path bypasses wire.ts — bound here too) ---
+    for (const ch of choices) {
+      const fixCost = (key: "moneyCost" | "staminaCost", max: number) => {
+        const v = ch[key];
+        const fixed = clampNum(Math.round(v), 0, max);
+        if (fixed !== v) {
+          ch[key] = fixed;
+          note(`${key} ${v} on ${ch.id} clamped to ${fixed}`);
+        }
+      };
+      fixCost("moneyCost", CAPS.moneyCostMax);
+      fixCost("staminaCost", CAPS.staminaCostMax);
+      ch.minReputation = clampNum(Math.round(ch.minReputation), -100, 100);
+      const gateBroken =
+        (ch.minTrustNpcId === "") !== (ch.minTrustTier === "") ||
+        (ch.minTrustTier !== "" && !(GATE_TIERS as readonly string[]).includes(ch.minTrustTier));
+      if (gateBroken) {
+        ch.minTrustNpcId = "";
+        ch.minTrustTier = "";
+        note(`half-formed trust gate on ${ch.id} cleared`);
+      }
+      if (ch.anchorNpcId !== "" && !focusSet.has(ch.anchorNpcId)) {
+        note(`anchor ${ch.anchorNpcId} on ${ch.id} not in focusNpcIds — cleared`);
+        ch.anchorNpcId = "";
+      }
+    }
+
+    // --- affordability floor against the PROJECTED post-apply state ---
+    // (these choices are picked from AFTER this turn's costs+deltas land)
+    const trustDeltaOf = (id: NpcId) =>
+      u.npcUpdates.find((n) => n.npcId === id)?.trustDelta ?? 0;
+    const projected: AffordSnapshot = {
+      money: clampNum(
+        clampNum(state.player.money - (chosen?.moneyCost ?? 0), ABS_RANGES.money.min, ABS_RANGES.money.max) +
+          u.moneyDelta,
+        ABS_RANGES.money.min,
+        ABS_RANGES.money.max,
+      ),
+      health: clampNum(
+        clampNum(state.player.health - (chosen?.staminaCost ?? 0), ABS_RANGES.health.min, ABS_RANGES.health.max) +
+          u.healthDelta,
+        ABS_RANGES.health.min,
+        ABS_RANGES.health.max,
+      ),
+      reputation: clampNum(
+        state.player.reputation + u.reputationDelta,
+        ABS_RANGES.reputation.min,
+        ABS_RANGES.reputation.max,
+      ),
+      trustOf: (id) =>
+        clampNum(state.npcs[id].trust + trustDeltaOf(id), ABS_RANGES.trust.min, ABS_RANGES.trust.max),
+    };
+    enforceAffordabilityFloor(choices, projected, note);
+
     t.choices = choices;
   }
 

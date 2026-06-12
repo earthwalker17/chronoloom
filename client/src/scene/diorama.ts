@@ -30,11 +30,25 @@ import { DirectiveMapper } from "./directiveMapper";
 
 export type { NameplatePos } from "./nameplates";
 
+/** What a pointer click in the 3D scene resolved to. */
+export type SceneHit = { kind: "npc"; npcId: string };
+
 export interface DioramaHandle {
   /** Tween every scene channel toward the directive. Retarget-safe mid-tween. */
   applyDirective(d: SceneDirective, ms?: number): void;
   resize(width: number, height: number): void;
   onNameplates(cb: (plates: NameplatePos[]) => void): void;
+  /** Click picking over hero figures. null = empty-scene click. */
+  onPick(cb: (hit: SceneHit | null) => void): void;
+  /**
+   * Heroes that glow as interactable (anchored choices). Subset of the
+   * directive's focusNpcIds; [] clears. Hover shows pointer cursor + brighten.
+   */
+  setHighlights(npcIds: readonly string[]): void;
+  /** Hero plays a talking gesture while set; null stops. */
+  setTalking(npcId: string | null): void;
+  /** Protagonist turns and walks toward the hero; null = return to idle anchor. */
+  protagonistApproach(npcId: string | null): void;
   setRunning(running: boolean): void;
   info(): { drawCalls: number; triangles: number; fps: number };
   /** PNG data URL of the current frame (renderer keeps the drawing buffer). */
@@ -159,6 +173,12 @@ export function initDiorama(canvas: HTMLCanvasElement): DioramaHandle {
     onNameplates(cb) {
       nameplateCb = cb;
     },
+
+    // --- scene-native interaction (implemented by the figures/picking pass) ---
+    onPick(_cb) {},
+    setHighlights(_npcIds) {},
+    setTalking(_npcId) {},
+    protagonistApproach(_npcId) {},
 
     setRunning,
 

@@ -16,9 +16,9 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 async function main() {
   const config = loadConfig();
-  const { director, fallback } = await selectDirectors(config);
+  const { directors, defaultEngine, fallback } = await selectDirectors(config);
   const store = new SessionStore(path.join(root, "data", "sessions"));
-  const app = createApp({ config, director, fallback, store });
+  const app = createApp({ config, directors, defaultEngine, fallback, store });
 
   // Production: serve the built client same-origin if it exists.
   const dist = path.join(root, "dist", "client");
@@ -29,7 +29,10 @@ async function main() {
   }
 
   serve({ fetch: app.fetch, port: config.port }, (info) => {
-    console.log(`[chronoloom] engine=${config.engine}${config.engine === "claude" ? ` model=${config.model}` : ""} fallback=${fallback ? "scripted" : "none"}`);
+    const available = [...directors.keys()].join(",");
+    console.log(
+      `[chronoloom] engine=${defaultEngine}${defaultEngine === "claude" ? ` model=${config.model}` : ""} providers=[${available}] fallback=${fallback ? "scripted" : "none"}`,
+    );
     console.log(`[chronoloom] api on http://localhost:${info.port}${existsSync(dist) ? " (serving dist/client)" : ""}`);
   });
 }

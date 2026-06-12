@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import type { EngineId } from "@shared/constants";
 import type { AppConfig } from "./config";
 import type { Director } from "./engine/director";
 import { metaRoutes } from "./routes/meta";
@@ -7,7 +8,11 @@ import { SessionStore } from "./store/sessionStore";
 
 export interface AppDeps {
   config: AppConfig;
-  director: Director;
+  /** Engines sessions can be pinned to; always contains "scripted". */
+  directors: Map<EngineId, Director>;
+  /** Engine for new sessions that don't request a provider. */
+  defaultEngine: EngineId;
+  /** Serves a turn when the primary engine fails (null = fail hard). */
   fallback: Director | null;
   store: SessionStore;
 }
@@ -17,7 +22,7 @@ export function createApp(deps: AppDeps): Hono {
   const app = new Hono();
   const api = new Hono();
 
-  api.route("/", metaRoutes(deps.config));
+  api.route("/", metaRoutes(deps));
   api.route("/", sessionRoutes(deps satisfies SessionDeps));
 
   app.route("/api", api);

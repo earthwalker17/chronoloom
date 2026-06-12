@@ -50,14 +50,32 @@ async function post(app: Hono, url: string, body: unknown): Promise<Response> {
 }
 
 type Lean = "protect" | "money";
+
+/** Client-side affordability — exactly what the UI derives from the redacted view. */
+const TIER_ORDER = ["冷淡", "相识", "信任", "莫逆"] as const;
+function viewAffordable(view: SessionView, c: SessionView["scene"]["choices"][number]): boolean {
+  if (view.player.money < c.moneyCost) return false;
+  if (c.staminaCost > 0 && view.player.health <= c.staminaCost) return false;
+  if (view.player.reputation < c.minReputation) return false;
+  if (c.minTrustNpcId !== "" && c.minTrustTier !== "") {
+    const npc = view.npcs.find((n) => n.id === c.minTrustNpcId);
+    if (!npc) return false;
+    if (TIER_ORDER.indexOf(npc.tier) < TIER_ORDER.indexOf(c.minTrustTier as (typeof TIER_ORDER)[number]))
+      return false;
+  }
+  return true;
+}
+
 function pickChoice(view: SessionView, lean: Lean): { id: string } {
+  const open = view.scene.choices.filter((ch) => viewAffordable(view, ch));
+  ok(open.length >= 2, `turn ${view.turn}: ≥2 affordable choices (floor holds)`);
   const prefer = lean === "protect" ? ["protect_someone", "reveal_info", "pursue_art"] : ["pursue_money", "take_risk", "conceal_info"];
   for (const tag of prefer) {
-    const c = view.scene.choices.find((ch) => ch.actionTag === tag);
+    const c = open.find((ch) => ch.actionTag === tag);
     if (c) return c;
   }
-  const first = view.scene.choices[0];
-  if (!first) throw new Error("no choices available");
+  const first = open[0];
+  if (!first) throw new Error("no affordable choices available");
   return first;
 }
 
@@ -128,7 +146,13 @@ async function playLife(app: Hono, store: SessionStore, lean: Lean): Promise<{ v
 async function main() {
   const dir = mkdtempSync(path.join(tmpdir(), "chronoloom-e2e-"));
   const store = new SessionStore(dir);
-  const app = createApp({ config, director: new ScriptedDirector(), fallback: null, store });
+  const app = createApp({
+    config,
+    directors: new Map([["scripted", new ScriptedDirector()] as const]),
+    defaultEngine: "scripted",
+    fallback: null,
+    store,
+  });
 
   console.log("— meta —");
   const health = await json<{ ok: boolean; engine: string }>(await app.request("/api/health"));

@@ -11,7 +11,7 @@ import {
   type IdentityId,
   type NpcId,
 } from "@shared/constants";
-import type { LifeReport, SessionState, TimelineEvent } from "@shared/types";
+import type { LifeReport, Mirror, SessionState, TimelineEvent } from "@shared/types";
 import { IDENTITIES } from "./identities";
 import { NPCS, NPC_NAME_ZH } from "./npcs";
 
@@ -92,6 +92,85 @@ function topTendencies(state: SessionState, n: number): ActionTag[] {
     .filter((t) => state.player.tendencies[t] > 0)
     .sort((a, b) => state.player.tendencies[b] - state.player.tendencies[a])
     .slice(0, n);
+}
+
+// ---------------------------------------------------------------------------
+// 镜中人 — deterministic real-player mirror from the lived record
+// ---------------------------------------------------------------------------
+
+const TAG_OBSERVATION: Record<ActionTag, string> = {
+  seek_patronage: "你相信人与人之间的网，遇事先想到的是'谁能帮上忙'——这不是圆滑，是你对'独木难支'有切身的认识。",
+  protect_someone: "看到有人要被压垮时，你很难说服自己转过头去。别人的难处会变成你自己的事，这几乎不像是选择，更像本能。",
+  conceal_info: "你习惯先把话留三分。知道的不全说，不是因为冷漠，而是你深知话一旦出口就收不回来。",
+  reveal_info: "心里搁不住事，是非面前你倾向把话摆到桌面上——哪怕明知道这样会得罪人。",
+  take_risk: "规规矩矩的路让你不安分。有五成把握你就愿意下注，输赢之外，你更怕的是'没试过'。",
+  preserve_reputation: "你在意别人眼里的自己，走每一步都先想'这样做体面吗'。这让你稳，也让你时常活得有些累。",
+  pursue_money: "你对'手里有钱心里不慌'有很实在的执念。这不是贪，是你深知没有余粮的日子是什么滋味。",
+  pursue_status: "你想往上走，想被看见、被承认。承认这一点并不丢人——那是你对自己尚未到达之处的诚实。",
+  pursue_art: "在实利和心气之间，你常常选心气。有些东西做得好不好，只有你自己知道，而你过不了自己这一关。",
+  observe_wait: "你习惯先看再动。许多人把这看作犹豫，其实是你不愿意在看不清的局里交出主动权。",
+};
+
+const TAG_TENSION: Record<ActionTag, string> = {
+  seek_patronage: "依靠别人与保全自己之间，你始终在找那个不亏欠的位置。",
+  protect_someone: "你想护住别人，却不太习惯让别人护你。",
+  conceal_info: "你渴望被了解，却又先一步把自己藏好。",
+  reveal_info: "你知道直话伤人，可弯着说的话你自己先难受。",
+  take_risk: "你向往安稳，却又受不了安稳带来的沉闷。",
+  preserve_reputation: "你想活给自己看，却总不自觉先看别人的眼色。",
+  pursue_money: "你算得清每一文钱,却算不清自己愿意为谁破例。",
+  pursue_status: "你想往高处走，又怕高处的自己认不出原来的自己。",
+  pursue_art: "你不甘心向现实低头，又不得不在现实里讨生活。",
+  observe_wait: "你等最稳妥的时机，可心里清楚有些时机等不来。",
+};
+
+const TAG_ADVICE: Record<ActionTag, string> = {
+  seek_patronage: "你经营人情的本事是真的，但别忘了：最值得经营的那个人，是你自己。偶尔也让别人来求你一次。",
+  protect_someone: "你的肩膀让很多人靠过，记得偶尔检查一下自己站得稳不稳。护人之前，先别弄丢自己。",
+  conceal_info: "藏锋是本事，但信任总得有人先递出第一寸。挑一两个值得的人，把话说满一次试试。",
+  reveal_info: "你的坦荡是稀有的东西，别让它磨钝。只是直话也可以挑时辰说——话是给人听的，不是给理对的。",
+  take_risk: "敢下注的人少，你是其中一个。只提醒一句：最大的赌注不在桌面上，是日复一日的耐心。",
+  preserve_reputation: "体面你已经够了，偶尔允许自己狼狈一次。真正记得你的人，记住的从来不是你的体面。",
+  pursue_money: "踏实是你的根，别人笑你计较时不必理会。只是账本之外的那些账——情分、亏欠、心安——也值得记一笔。",
+  pursue_status: "想被看见不是错。只是路往上走的时候，回头看看是谁一直在原地为你举着灯。",
+  pursue_art: "守住那点心气，它比你以为的值钱。但也吃饭——养得活自己的心气，才走得远。",
+  observe_wait: "看得清是天分，等得起是修养。可有些门只在敲的人面前开——下一次，早半步伸手。",
+};
+
+const STYLE_FOCUSED = "认定了一条路，你就很少回头——你的选择有一种近乎固执的连贯。";
+const STYLE_BALANCED = "你不押注在单一的活法上：每一步都在掂量眼前的局，而不是套用同一个答案。";
+
+/**
+ * Deterministic 镜中人 from tendencies + history. Also used to backfill
+ * pre-mirror saved reports on migration.
+ */
+export function buildScriptedMirror(state: SessionState): Mirror {
+  const tags = topTendencies(state, 3);
+  const dominant = tags[0] ?? "observe_wait";
+  const second = tags[1];
+  const total = ACTION_TAGS.reduce((sum, t) => sum + state.player.tendencies[t], 0);
+  const dominantShare = total > 0 ? state.player.tendencies[dominant] / total : 0;
+
+  const evidenceFor = (tag: ActionTag): string => {
+    const moments = state.history.filter((h) => h.actionTag === tag).map((h) => h.labelZh);
+    if (moments.length === 0) return "这七日里你不止一次这样选了。";
+    if (moments.length === 1) return `你选了「${moments[0]}」。`;
+    return `你先后选了「${moments[0]}」「${moments[moments.length - 1]}」。`;
+  };
+
+  const themes = tags.map((t) => ({
+    observationZh: TAG_OBSERVATION[t],
+    evidenceZh: evidenceFor(t),
+  }));
+
+  return {
+    decisionStyleZh: dominantShare >= 0.5 ? STYLE_FOCUSED : STYLE_BALANCED,
+    themes,
+    innerTensionZh: TAG_TENSION[second ?? dominant],
+    gentleAdviceZh: TAG_ADVICE[dominant],
+    blessingZh:
+      "灯会散了，那个在长安灯下做选择的人，和此刻读这页字的人，原是同一副心肠。往后的路，愿你也这样走——认得出自己，护得住在意的，偶尔，也敢把灯举高一点。",
+  };
 }
 
 function initialTrust(identityId: IdentityId, npcId: NpcId): number {
@@ -192,6 +271,7 @@ export function buildScriptedReport(state: SessionState): LifeReport {
     sacrificedZh: TAG_SACRIFICED[dominant],
     roadNotTakenZh: TAG_ROAD[dominant],
     closingLetterZh,
+    mirror: buildScriptedMirror(state),
     shareCard: {
       headlineZh: lifeTitleZh,
       sublineZh: `长安上元 · 七日 · ${TAG_EPITHET[dominant]}`,

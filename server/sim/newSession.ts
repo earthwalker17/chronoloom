@@ -15,7 +15,7 @@ const BASE_TENSIONS: Tensions = {
 
 export function newSession(
   identityId: IdentityId,
-  engine: "claude" | "scripted",
+  engine: SessionState["engine"],
   playerNameZh?: string,
 ): SessionState {
   const def = IDENTITIES[identityId];
@@ -43,6 +43,7 @@ export function newSession(
           respect: base.baseRespect,
           agendaZh: base.agendaZh,
           memory: prior.trust !== 0 ? [{ turn: 0, summaryZh: prior.noteZh }] : [],
+          revealed: [] as string[],
         },
       ];
     }),
@@ -98,8 +99,10 @@ export function newSession(
         focusNpcIds: [],
       },
       choices: [],
+      npcLines: [],
     },
     history: [],
+    talkedNpcIds: [],
     validationLog: [],
     report: null,
   };

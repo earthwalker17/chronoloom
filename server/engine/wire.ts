@@ -6,11 +6,14 @@
  */
 import { z } from "zod";
 import {
+  CAPS,
   CHOICE_IDS,
+  GATE_TIERS,
   NPC_IDS,
   SKILL_IDS,
   STATUS_IDS,
   TIMELINE_KINDS,
+  type GateTier,
   type LocationId,
   type NpcId,
   type SkillId,
@@ -28,20 +31,33 @@ const isSkill = (v: string): v is SkillId => (SKILL_IDS as readonly string[]).in
 const isStatus = (v: string): v is StatusId => (STATUS_IDS as readonly string[]).includes(v);
 const isLocation = (v: string): v is LocationId => (LOCATION_IDS as readonly string[]).includes(v);
 const isKind = (v: string): v is TimelineKind => (TIMELINE_KINDS as readonly string[]).includes(v);
+const isGateTier = (v: string): v is GateTier => (GATE_TIERS as readonly string[]).includes(v);
 
 const intIn = <T extends number>(v: number, allowed: readonly T[], fallback: T): T => {
   const r = Math.round(v) as T;
   return allowed.includes(r) ? r : fallback;
 };
 
+const cost = (v: number, max: number): number => Math.max(0, Math.min(max, Math.round(v)));
+
 export function wireToDirectorTurn(wire: Wire): DirectorTurn {
-  const choices: Choice[] = wire.choices.slice(0, 4).map((c, i) => ({
-    id: CHOICE_IDS[i] ?? "c4",
-    labelZh: c.labelZh,
-    hintZh: c.hintZh,
-    actionTag: c.actionTag,
-    risk: c.risk,
-  }));
+  const choices: Choice[] = wire.choices.slice(0, 4).map((c, i) => {
+    // Trust gates only make sense as a pair; drop half-formed ones.
+    const gateNpc = isNpc(c.minTrustNpcId) && isGateTier(c.minTrustTier) ? c.minTrustNpcId : "";
+    return {
+      id: CHOICE_IDS[i] ?? "c4",
+      labelZh: c.labelZh,
+      hintZh: c.hintZh,
+      actionTag: c.actionTag,
+      risk: c.risk,
+      anchorNpcId: isNpc(c.anchorNpcId) ? c.anchorNpcId : "",
+      moneyCost: cost(c.moneyCost, CAPS.moneyCostMax),
+      staminaCost: cost(c.staminaCost, CAPS.staminaCostMax),
+      minReputation: Math.max(-100, Math.min(100, Math.round(c.minReputation))),
+      minTrustNpcId: gateNpc,
+      minTrustTier: gateNpc ? (c.minTrustTier as GateTier) : "",
+    };
+  });
 
   return {
     sceneTitleZh: wire.sceneTitleZh,
@@ -52,6 +68,10 @@ export function wireToDirectorTurn(wire: Wire): DirectorTurn {
       focusNpcIds: wire.directive.focusNpcIds.filter(isNpc),
     },
     choices,
+    npcLines: wire.npcLines
+      .filter((l) => isNpc(l.npcId))
+      .slice(0, CAPS.npcLinesMax)
+      .map((l) => ({ npcId: l.npcId as NpcId, lineZh: l.lineZh })),
     update: {
       moneyDelta: wire.update.moneyDelta,
       healthDelta: wire.update.healthDelta,

@@ -12,7 +12,7 @@ import type { z } from "zod";
 import { DirectorTurnWireSchema, LifeReportSchema } from "@shared/schemas";
 import type { Choice, DirectorTurn, LifeReport, QueuedEvent, SessionState } from "@shared/types";
 import type { AppConfig } from "../config";
-import { EngineError, type Director } from "./director";
+import { EngineError, type Director, type TalkContext, type TalkResult } from "./director";
 import { wireToDirectorTurn } from "./wire";
 import {
   DIRECTOR_RULES,
@@ -153,6 +153,12 @@ export class ClaudeDirector implements Director {
       maxTokens: TURN_MAX_TOKENS,
     });
     return wireToDirectorTurn(wire);
+  }
+
+  async talk(_state: SessionState, _ctx: TalkContext): Promise<TalkResult> {
+    // Live talk lands with the persona prompts (TALK_RULES); until then the
+    // route's fallback ladder serves 攀谈 from the scripted templates.
+    throw new EngineError("api", "live talk not wired yet");
   }
 
   async writeReport(state: SessionState): Promise<LifeReport> {

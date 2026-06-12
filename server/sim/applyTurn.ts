@@ -27,6 +27,13 @@ export function applyDirectorTurn(
   const newTurn = isArrival ? 0 : s.turn + 1;
   const u = turn.update;
 
+  // --- choice costs land FIRST, as their own clamped step ---
+  // (a positive outcome delta must never mask the cost at the 0/100 boundaries)
+  if (chosen) {
+    s.player.money = clampAbs(s.player.money - chosen.moneyCost, ABS_RANGES.money);
+    s.player.health = clampAbs(s.player.health - chosen.staminaCost, ABS_RANGES.health);
+  }
+
   // --- player numerics ---
   s.player.money = clampAbs(s.player.money + u.moneyDelta, ABS_RANGES.money);
   s.player.health = clampAbs(s.player.health + u.healthDelta, ABS_RANGES.health);
@@ -119,7 +126,11 @@ export function applyDirectorTurn(
     proseZh: turn.proseZh,
     directive: turn.directive,
     choices: turn.choices,
+    npcLines: turn.npcLines,
   };
+
+  // --- 攀谈 fence resets with every applied turn ---
+  s.talkedNpcIds = [];
 
   // --- turn / chapter / ending (server-owned) ---
   s.turn = newTurn;
