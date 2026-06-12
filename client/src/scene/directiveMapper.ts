@@ -17,6 +17,7 @@ import type { SkyUniforms } from "./renderer";
 import { LANTERN_COUNTS, LANTERN_LIGHT_FACTOR, Lanterns } from "./lanterns";
 import { BANNER_BASE_AMPLITUDE, Banners } from "./banners";
 import { CROWD_COUNTS, Crowd } from "./crowd";
+import { Heroes } from "./heroes";
 import { Particles, type ParticleMode } from "./particles";
 
 export const LOCATION_PRESETS: Record<LocationId, PresetId> = {
@@ -65,6 +66,7 @@ export interface DirectiveMapperDeps {
   lanterns: Lanterns;
   banners: Banners;
   crowd: Crowd;
+  heroes: Heroes;
   particles: Particles;
 }
 
@@ -72,7 +74,7 @@ export class DirectiveMapper {
   constructor(private readonly deps: DirectiveMapperDeps) {}
 
   apply(d: SceneDirective, ms: number): void {
-    const { tweener, renderer, fog, skyUniforms, lights, rig, materials, lanterns, banners, crowd, particles } =
+    const { tweener, renderer, fog, skyUniforms, lights, rig, materials, lanterns, banners, crowd, heroes, particles } =
       this.deps;
     const base = LIGHTING[d.timeOfDay];
 
@@ -146,7 +148,8 @@ export class DirectiveMapper {
     particles.setVisible(mode !== null);
 
     // --- Immediate (non-tweened) state -----------------------------------------
-    crowd.setFocus(d.focusNpcIds.slice(0, 3));
+    heroes.setFocus(d.focusNpcIds.slice(0, 3));
+    heroes.setLocationPreset(LOCATION_PRESETS[d.locationId]);
     rig.setPushIn(d.mood === "ominous");
     rig.goTo(LOCATION_PRESETS[d.locationId], ms, tweener);
 

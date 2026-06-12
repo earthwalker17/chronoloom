@@ -5,6 +5,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   CROWD_LEVELS,
+  IDENTITY_IDS,
   LANTERN_LEVELS,
   LOCATION_IDS,
   MOODS,
@@ -30,6 +31,10 @@ export function DevScene() {
   const handleRef = useRef<DioramaHandle | null>(null);
   const [directive, setDirective] = useState<SceneDirective>(INITIAL);
   const [stats, setStats] = useState({ drawCalls: 0, triangles: 0, fps: 0 });
+  const [protagonist, setProtagonist] = useState<string>("scholar");
+  const [highlighted, setHighlighted] = useState(false);
+  const [talkIdx, setTalkIdx] = useState(-1);
+  const [lastPick, setLastPick] = useState<string>("—");
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -40,6 +45,8 @@ export function DevScene() {
       handleRef.current = handle;
       handle.resize(window.innerWidth, window.innerHeight);
       handle.applyDirective(INITIAL, 0);
+      handle.setProtagonist("scholar");
+      handle.onPick((hit) => setLastPick(hit ? hit.npcId : "(empty)"));
     });
     const statsTimer = setInterval(() => {
       if (handleRef.current) setStats(handleRef.current.info());
@@ -131,6 +138,65 @@ export function DevScene() {
             ))}
           </select>
         </label>
+        <label style={{ display: "flex", gap: 6, alignItems: "center", fontSize: 12 }}>
+          <span style={{ width: 56 }}>主角</span>
+          <select
+            value={protagonist}
+            onChange={(e) => {
+              setProtagonist(e.target.value);
+              handleRef.current?.setProtagonist(e.target.value === "none" ? null : e.target.value);
+            }}
+            style={{ flex: 1 }}
+          >
+            <option value="none">none</option>
+            {IDENTITY_IDS.map((id) => (
+              <option key={id} value={id}>
+                {id}
+              </option>
+            ))}
+          </select>
+        </label>
+        <div style={{ display: "flex", gap: 6 }}>
+          <button
+            className="btn-ghost"
+            style={{ fontSize: 12, padding: "4px 6px", flex: 1, opacity: highlighted ? 1 : 0.6 }}
+            onClick={() => {
+              const next = !highlighted;
+              setHighlighted(next);
+              handleRef.current?.setHighlights(next ? directive.focusNpcIds : []);
+            }}
+          >
+            高亮{highlighted ? "✓" : ""}
+          </button>
+          <button
+            className="btn-ghost"
+            style={{ fontSize: 12, padding: "4px 6px", flex: 1 }}
+            onClick={() => {
+              const next = talkIdx + 1 >= directive.focusNpcIds.length ? -1 : talkIdx + 1;
+              setTalkIdx(next);
+              handleRef.current?.setTalking(next < 0 ? null : (directive.focusNpcIds[next] ?? null));
+            }}
+          >
+            说话:{talkIdx < 0 ? "无" : directive.focusNpcIds[talkIdx]?.slice(0, 4)}
+          </button>
+        </div>
+        <div style={{ display: "flex", gap: 6 }}>
+          <button
+            className="btn-ghost"
+            style={{ fontSize: 12, padding: "4px 6px", flex: 1 }}
+            onClick={() => handleRef.current?.protagonistApproach(directive.focusNpcIds[0] ?? null)}
+          >
+            走近要角
+          </button>
+          <button
+            className="btn-ghost"
+            style={{ fontSize: 12, padding: "4px 6px", flex: 1 }}
+            onClick={() => handleRef.current?.protagonistApproach(null)}
+          >
+            回位
+          </button>
+        </div>
+        <div style={{ fontSize: 12, opacity: 0.9 }}>点中：{lastPick}</div>
         <div style={{ fontSize: 12, opacity: 0.9 }}>
           drawCalls {stats.drawCalls} · tris {(stats.triangles / 1000).toFixed(1)}k · fps {stats.fps.toFixed(0)}
         </div>

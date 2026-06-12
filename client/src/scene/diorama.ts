@@ -1,14 +1,17 @@
 /**
  * Orchestrator and the ONLY public entry point for the Chang'an diorama.
  * Owns the requestAnimationFrame loop, drives every module's per-frame
- * update, and emits nameplate screen positions each frame.
+ * update, emits nameplate screen positions each frame, and surfaces the
+ * scene-native interaction channels (picking, highlights, talk gestures,
+ * protagonist).
  *
- * Draw-call audit (worst case: night + festival + packed + 3 heroes):
+ * Draw-call audit (worst case: night + festival + packed + 3 heroes + player):
  *   sky 1, ground 1, buildings 2 (opaque + window glow), gate tower 1,
  *   stalls 2 (solids + awnings), props 1, lanterns 2 (instanced + strings),
- *   banners 1, crowd 1 (instanced) + hero bodies 3 + markers 3, particles 1
- *   → ~19 draw calls observed, ~25–30 expected ceiling, ≤40 budget.
- * Triangles ≈ 15–20k (≤60k budget).
+ *   banners 1, crowd 2 (instanced humanoid variants),
+ *   heroes 3×3 (merged body + 2 arm sleeves) + markers 3, protagonist 3,
+ *   particles 1 → ~29–32 expected, ≤40 budget.
+ * Triangles ≈ 18–24k (humanoids <400 tris each; ≤60k budget).
  */
 import type { SceneDirective } from "@shared/types";
 import { createRenderer } from "./renderer";
@@ -23,6 +26,8 @@ import { createProps } from "./props";
 import { Lanterns } from "./lanterns";
 import { Banners } from "./banners";
 import { Crowd } from "./crowd";
+import { Heroes } from "./heroes";
+import { Picking } from "./picking";
 import { Particles } from "./particles";
 import { projectNameplates, type NameplatePos } from "./nameplates";
 import { Tweener } from "./tween";
@@ -91,6 +96,7 @@ export function initDiorama(canvas: HTMLCanvasElement): DioramaHandle {
   const lanterns = new Lanterns(materials);
   const banners = new Banners(materials);
   const crowd = new Crowd(materials);
+  const heroes = new Heroes(materials);
   const particles = new Particles();
 
   const staticMeshes = [
@@ -102,7 +108,9 @@ export function initDiorama(canvas: HTMLCanvasElement): DioramaHandle {
     stalls.awningMesh,
     props,
   ];
-  bundle.scene.add(...staticMeshes, lanterns.group, banners.mesh, crowd.group, particles.points);
+  bundle.scene.add(...staticMeshes, lanterns.group, banners.mesh, crowd.group, heroes.group, particles.points);
+
+  const picking = new Picking(canvas, rig.camera, heroes);
 
   const tweener = new Tweener();
   const mapper = new DirectiveMapper({
@@ -116,6 +124,7 @@ export function initDiorama(canvas: HTMLCanvasElement): DioramaHandle {
     lanterns,
     banners,
     crowd,
+    heroes,
     particles,
   });
   mapper.apply(DEFAULT_DIRECTIVE, 0);
@@ -144,10 +153,11 @@ export function initDiorama(canvas: HTMLCanvasElement): DioramaHandle {
     lanterns.update(animTime);
     banners.update(animTime);
     crowd.update(animTime);
+    heroes.update(animTime, dt);
     particles.update(animTime);
 
     renderFrame();
-    if (nameplateCb) nameplateCb(projectNameplates(rig.camera, crowd.getAnchors(), cssW, cssH));
+    if (nameplateCb) nameplateCb(projectNameplates(rig.camera, heroes.getAnchors(), cssW, cssH));
   };
 
   const setRunning = (run: boolean): void => {
@@ -179,12 +189,22 @@ export function initDiorama(canvas: HTMLCanvasElement): DioramaHandle {
       nameplateCb = cb;
     },
 
-    // --- scene-native interaction (implemented by the figures/picking pass) ---
-    onPick(_cb) {},
-    setHighlights(_npcIds) {},
-    setTalking(_npcId) {},
-    setProtagonist(_identityId) {},
-    protagonistApproach(_npcId) {},
+    // --- scene-native interaction ---
+    onPick(cb) {
+      picking.onPick(cb);
+    },
+    setHighlights(npcIds) {
+      heroes.setHighlights(npcIds);
+    },
+    setTalking(npcId) {
+      heroes.setTalking(npcId);
+    },
+    setProtagonist(identityId) {
+      heroes.setProtagonist(identityId);
+    },
+    protagonistApproach(npcId) {
+      heroes.protagonistApproach(npcId);
+    },
 
     setRunning,
 
@@ -207,10 +227,12 @@ export function initDiorama(canvas: HTMLCanvasElement): DioramaHandle {
       }
       nameplateCb = null;
       tweener.clear();
+      picking.dispose();
       for (const mesh of staticMeshes) mesh.geometry.dispose();
       lanterns.dispose();
       banners.dispose();
       crowd.dispose();
+      heroes.dispose();
       particles.dispose();
       for (const m of materials.all) m.dispose();
       bundle.dispose();
