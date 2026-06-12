@@ -74,3 +74,46 @@ Unblock and verify the live Claude engine end-to-end with the user's working API
 ### Issues / Follow-ups
 - Any growth of the wire schema risks re-hitting the grammar ceiling — test `npm run test:live` after schema changes.
 - PROJECT.md §24 demo-ready checklist: all items pass (start session ✓ identity ✓ visual scene ✓ meaningful choices ✓ state updates ✓ next scene reflects actions ✓ recurring relationship ✓ timeline ✓ grounded report ✓ local run docs ✓ main flow stable ✓ screenshot-worthy ✓).
+
+## Task Log: 2026-06-12 — Scene-Native Upgrade (v1.2): living NPCs, stats that bite, 镜中人, providers
+
+### Goal
+Evolve the slice from "text-choice 命数推演 with a 3D backdrop" into a scene-native 3D life simulator: interaction moves into the scene (clickable humanoid NPCs, in-scene speech, bounded 攀谈), stats become real game state (costs/gates), the 命书 gains a real-player 镜中人 reflection with a staged-generation UX, and the engine gains a minimal Claude/GPT/DeepSeek provider layer.
+
+### Changes Made
+- **M1 Contract trunk** — Choice += anchorNpcId/moneyCost/staminaCost/minReputation/minTrust gates (flat, sentinel-style); DirectorTurn/Scene += npcLines; TalkBody/TalkExchange/TalkResponse + Mirror schemas; SessionState += talkedNpcIds, npc.revealed; engine enum widens to claude|openai|deepseek|scripted; affordability floor in clamp (≥2 pickable, judged against the projected post-apply state); costs deducted before outcome deltas; `/turn` 422 choice_locked re-check; DI becomes a directors map with per-session engine pinning; migrate-on-read shim backfills old saves (incl. synthesized mirror); scripted beats authored with costs/anchors/npcLines.
+- **M2 Talk + personas** — all 5 NPCs gain personaZh/boundariesZh + 3 tier-laddered disclosures pointing at one hidden broker plot (查账→失账页→身契→掮客); DIRECTOR_RULES v2 (in-fiction pricing, npcLines, voice-distinct dialogue); TALK_RULES + buildTalkPrompt; **POST /sessions/:id/talk**: sub-turn, once-per-NPC-per-turn persisted fence, route pre-filters disclosures by trust tier (structural secret hiding — unqualified secrets never enter any model context), canonical-reveal-only, ±3 trust clamp, memory/ledger writes, post-talk affordability re-floor; mirror guard rebuilds hollow mirrors from the lived record.
+- **M3 Providers** — StructuredModelClient seam; AnthropicClient (verbatim move of the verified path); OpenAICompatClient (GPT json_schema strict / DeepSeek json_object + schema-in-prompt, one repair retry, proxy-aware); ModelDirector hosts all prompt/wire logic; ClaudeDirector is a thin subclass (lastUsage preserved); config gains OPENAI/DEEPSEEK keys + models with a claude>openai>deepseek>scripted default ladder; /health exposes a providers array; landing page 执笔者 chips (unavailable = visible, disabled); per-session provider pinning.
+- **M4 Scene layer** — figures.ts (merged-body + arm-pivot low-poly humanoids: 5 distinct NPC costumes + 4 protagonist identities, gendered silhouettes, <400 tris each); heroes.ts (steering walk-in/out on focus change, idle breath/head-turns, talk gesture, highlight pulse, protagonist approach-walk); picking.ts (drag-guarded raycast on fat hit proxies, hover brighten); instanced humanoid crowd (standing + walking variants); DioramaHandle v2 fully wired (onPick/setHighlights/setTalking/setProtagonist/protagonistApproach); DevScene knobs.
+- **M5 Client integration** — SpeechBubbles + NpcPopover ride the nameplate projection through a 60fps-isolated plates store; click-figure = anchored choice or 攀谈; ChoiceList cost chips + locked slips with reasons; report prefetched the moment a life ends + 命书生成 staged forging overlay + staged section reveal + 镜中人 section; share card decision-style line.
+- **M6 Verification tooling** — scripts/screenshot.ts (CDP-driven headless Edge with nameplate-relative + button-text clicks); scripts/grammar-probe.ts (wire-schema grammar-ceiling bisection); scripts/live-openai.ts (GPT/DeepSeek live smoke); live-turn.ts extended (npcLines, costs, live talk, live report+mirror grammar).
+
+### Files Touched
+shared/{constants,schemas,types}.ts · server/sim/{clamp,applyTurn,newSession,reportGuard}.ts · server/store/{migrate(new),sessionStore}.ts · server/engine/{director,wire,prompts,select,claudeDirector,modelDirector(new)}.ts · server/engine/providers/{types,anthropicClient,openaiCompatClient}(new) · server/routes/{meta,sessions}.ts · server/app.ts · server/config.ts · server/content/{npcs,scriptedBeats,reportTemplates,talkTemplates(new)}.ts · client/src/scene/{figures(new),heroes(new),picking(new),crowd,diorama,directiveMapper,index}.ts · client/src/{App,api,affordance(new),platesStore(new)}.ts(x) · client/src/components/{ChoiceList,SceneCanvas,ShareCard,SpeechBubbles(new),NpcPopover(new),ReportForging(new)}.tsx · client/src/screens/{Landing,Play,Report,DevScene}.tsx · styles · scripts/{e2e-playthrough,live-turn,screenshot(new),grammar-probe(new),live-openai(new)}.ts · tests/{helpers,clampCosts,migrate,talk,reportGuard,providers,openaiCompat}(new) + applyTurn updated · .env.example
+
+### Verification
+- `npm run typecheck` clean · `npm run test` **60/60** (clampCosts, migrate-with-real-fixtures, talk fences + structural tier filtering, mirror guard, provider config matrix, OpenAICompat mock parse/repair) · `npm run e2e` **172 assertions** (talk flow, locked-choice 422, ≥2-affordable floor per turn, mirror presence, divergence, error paths) · `npm run build` + `npm start` serve clean.
+- **`npm run test:live` 25/25 on claude-opus-4-8**: wire grammar compiles, npcLines in persona voice, costs sane, cache reads 10.3k tokens on call 2, live 攀谈 in-voice, live report with 3 evidence-backed mirror themes (guard clean).
+- **Live GPT smoke passed against gpt-5.1** (json_schema strict through OpenAICompatClient, zero clamp corrections). DeepSeek remains mock-tested only (no key).
+- Browser verification (headless Edge via CDP, prod build): humanoid NPCs with nameplates + in-scene speech bubbles; click-figure popover (anchored choice + 攀谈); live talk exchange showing the canonical reveal + fence; protagonist approach-walk; cost chips + locked slips; staged 镜中人 report; landing provider chips. Screenshots: `docs/screenshots/{devscene-humanoids,play-street-heroes,play-npc-popover,play-talk-exchange,play-live-scene-native,report-mirror,landing-providers}.png`. drawCalls 21 / tris 16k (budget ≤40/≤60k).
+- Live server playthrough on the real engine: arrival npcLine + live talk where 何十三娘 addressed the interpreter by name, referenced his contract trouble, and revealed her 相识-tier disclosure verbatim.
+
+### Decisions
+- **Grammar ceiling round 2**: the grown wire schema re-hit "compiled grammar too large". Probing (scripts/grammar-probe.ts) showed each addition fit alone but not together → costs/anchor pack into ONE `extra` string per choice ("money=200 stamina=8 anchor=he_shisan"), npcLines ship as "npcId|台词" strings, causalEntries' three string-arrays + timeline npcIds pack into ；-joined strings, in-choice enums relax to strings. wire.ts parses everything back; strict schemas unchanged.
+- Trust-tier gates are NOT on the live wire (scripted beats only) — the model prices with money/stamina/reputation.
+- Talk is sub-turn by construction (no turn/tendency/timeline mutation) and the route — not the engine — owns secrets: disclosures are tier-filtered before any prompt is built, and only canonical disclosure text reaches the client.
+- Click-a-figure opens an action popover (anchored choice + 攀谈) instead of submitting instantly — misclick safety beats the one-click spec.
+- schemaVersion stays 1 with migrate-on-read; report prefetch starts the moment finished=true (the idempotent route makes this free).
+
+### Issues / Follow-ups
+- **DeepSeek unverified live** (no key in this environment) — first user with a key should run `npx tsx scripts/live-openai.ts deepseek`.
+- `CHRONOLOOM_OPENAI_MODEL` defaults to gpt-5.1 (live-verified); revisit as models rotate.
+- Wire schema is now AT the grammar ceiling — any future field must displace something; run `scripts/grammar-probe.ts` before `npm run test:live` when touching it.
+- Hero slot layout is shared across camera presets; at teahouse_porch the slot-0 hero stands near the lens (bubble visible, figure partly out of frame) — consider per-preset slot tables in a polish pass.
+- Buildings believability pass (curved Tang roofs, lattice windows) was the planned lowest-priority cut and did not ship this session.
+- Talk depth is one exchange per NPC per turn (followUpZh = second line); multi-beat conversations deferred.
+
+### Next Steps (recommended)
+1. Full in-browser playthrough of all four identities on the live engine; tune hero slot placement per camera preset.
+2. Buildings polish pass + WebAudio ambience.
+3. DeepSeek live verification; consider exposing provider choice on the share card.

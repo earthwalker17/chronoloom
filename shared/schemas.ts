@@ -292,16 +292,18 @@ export const DirectorTurnSchema = z.object({
 export const WireChoiceSchema = z.object({
   labelZh: z.string(),
   hintZh: z.string(),
-  actionTag: ActionTagSchema,
-  risk: RiskLevelSchema,
-  // Costs/gates/anchor relaxed to plain primitives (grammar-cheap);
-  // wire.ts validates ids/tiers, clamp.ts bounds the numbers.
-  anchorNpcId: z.string(),
-  moneyCost: z.number(),
-  staminaCost: z.number(),
-  minReputation: z.number(),
-  minTrustNpcId: z.string(),
-  minTrustTier: z.string(),
+  // Enums relaxed to strings: repeated in-array enum productions are what
+  // blow the constrained-decoding grammar budget. wire.ts validates with
+  // safe fallbacks (observe_wait / medium).
+  actionTag: z.string(),
+  risk: z.string(),
+  /**
+   * Costs/gate/anchor packed into ONE string — the grammar ceiling rejects
+   * them as separate fields ("compiled grammar too large"). Space-separated
+   * tokens: "money=200 stamina=8 rep=10 anchor=he_shisan"; "" = free,
+   * unanchored. wire.ts parses + validates; malformed tokens just drop.
+   */
+  extra: z.string(),
 });
 
 export const WireNpcUpdateSchema = z.object({
@@ -327,7 +329,8 @@ export const DirectorTurnWireSchema = z.object({
     focusNpcIds: z.array(z.string()),
   }),
   choices: z.array(WireChoiceSchema),
-  npcLines: z.array(z.object({ npcId: z.string(), lineZh: z.string() })),
+  /** "npcId|台词" per entry (object nesting costs grammar; wire.ts splits). */
+  npcLines: z.array(z.string()),
   update: z.object({
     moneyDelta: z.number(),
     healthDelta: z.number(),
@@ -348,16 +351,19 @@ export const DirectorTurnWireSchema = z.object({
       titleZh: z.string(),
       descZh: z.string(),
       importance: z.number(),
-      npcIds: z.array(z.string()),
+      /** Comma/；-joined npc ids — arrays-in-arrays cost grammar. */
+      npcIds: z.string(),
     }),
   ),
   causalEntries: z.array(
     z.object({
       cause: z.string(),
       textZh: z.string(),
-      effectsZh: z.array(z.string()),
-      openedZh: z.array(z.string()),
-      closedZh: z.array(z.string()),
+      // ；-joined lists (wire.ts splits) — string arrays here tipped the
+      // grammar ceiling once npcLines + choice extras joined the schema.
+      effectsZh: z.string(),
+      openedZh: z.string(),
+      closedZh: z.string(),
     }),
   ),
   isEnding: z.boolean(),

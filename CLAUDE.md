@@ -28,12 +28,12 @@ Every feature should serve this loop:
 1. Enter an era.
 2. Choose or receive a concrete identity.
 3. Arrive in a visually memorable scene.
-4. Take an action.
+4. Take an action **in the scene** — anchored choices on the people involved, bounded NPC talk, and structured choice cards are channels into the same simulation.
 5. Simulate consequences.
 6. Generate the next stage from updated state.
 7. Record the life trajectory.
 
-The product should not feel like a static quiz, fixed branching novel, or plain chatbot.
+The product should not feel like a static quiz, fixed branching novel, plain chatbot — or a flat fortune-telling interface. The scene is an interaction surface, not a backdrop.
 
 ## 4. First Prototype Goal
 Build a playable public vertical slice, not a full historical open-world game.
@@ -69,7 +69,7 @@ Keep implementation simple, but design around these concepts:
 - **Era Bible:** structured rules and texture for time, location, classes, institutions, roles, constraints, opportunities, dangers, tone, visual motifs, and plausibility boundaries.
 - **Player State:** identity, role, status, resources, skills, health, reputation, relationships, location, life stage, major decisions, and inferred tendencies.
 - **World State:** date/chapter, public mood, faction tensions, economy, rumors, active events, opportunities, threats, and institutional pressure.
-- **NPC State:** name, role, motivation, relationship to player, trust/attitude, memory of interactions, and possible future actions.
+- **NPC State:** name, role, motivation, relationship to player, trust/attitude, memory of interactions, possible future actions — plus a persona (voice, boundaries) and tiered disclosures whose hiding is structural: secrets the player hasn't earned never enter any model context.
 - **Event Queue:** upcoming events triggered by player choices, world state, NPC actions, time passing, bounded randomness, and narrative pacing.
 - **Causal Ledger:** cause-effect links showing what the player did, what changed, why it changed, and what opened or closed next.
 - **Narrative Director:** AI layer that turns structured state into concise immersive scenes and meaningful next actions.

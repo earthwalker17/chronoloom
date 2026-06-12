@@ -6,16 +6,18 @@
  */
 import { z } from "zod";
 import {
+  ACTION_TAGS,
   CAPS,
   CHOICE_IDS,
-  GATE_TIERS,
   NPC_IDS,
+  RISK_LEVELS,
   SKILL_IDS,
   STATUS_IDS,
   TIMELINE_KINDS,
-  type GateTier,
+  type ActionTag,
   type LocationId,
   type NpcId,
+  type RiskLevel,
   type SkillId,
   type StatusId,
   type TimelineKind,
@@ -31,7 +33,8 @@ const isSkill = (v: string): v is SkillId => (SKILL_IDS as readonly string[]).in
 const isStatus = (v: string): v is StatusId => (STATUS_IDS as readonly string[]).includes(v);
 const isLocation = (v: string): v is LocationId => (LOCATION_IDS as readonly string[]).includes(v);
 const isKind = (v: string): v is TimelineKind => (TIMELINE_KINDS as readonly string[]).includes(v);
-const isGateTier = (v: string): v is GateTier => (GATE_TIERS as readonly string[]).includes(v);
+const isTag = (v: string): v is ActionTag => (ACTION_TAGS as readonly string[]).includes(v);
+const isRisk = (v: string): v is RiskLevel => (RISK_LEVELS as readonly string[]).includes(v);
 
 const intIn = <T extends number>(v: number, allowed: readonly T[], fallback: T): T => {
   const r = Math.round(v) as T;
@@ -40,24 +43,63 @@ const intIn = <T extends number>(v: number, allowed: readonly T[], fallback: T):
 
 const cost = (v: number, max: number): number => Math.max(0, Math.min(max, Math.round(v)));
 
+/** Split a ；/;/,-joined wire string into a trimmed list ("" → []). */
+function splitPacked(s: string): string[] {
+  return s
+    .split(/[；;，,]/)
+    .map((v) => v.trim())
+    .filter((v) => v.length > 0);
+}
+
+/**
+ * Parse the packed choice-extra DSL: "money=200 stamina=8 rep=10
+ * anchor=he_shisan". Forgiving by design — malformed tokens drop and leave
+ * the choice free/unanchored; clamp.ts re-bounds everything afterwards.
+ */
+function parseChoiceExtra(s: string): {
+  anchorNpcId: NpcId | "";
+  moneyCost: number;
+  staminaCost: number;
+  minReputation: number;
+} {
+  let anchorNpcId: NpcId | "" = "";
+  let moneyCost = 0;
+  let staminaCost = 0;
+  let minReputation = -100;
+  for (const token of s.split(/[\s;,，；]+/)) {
+    const [k, v] = token.split(/[=:：]/);
+    if (!k || v === undefined) continue;
+    const n = Number(v);
+    switch (k.trim()) {
+      case "anchor":
+        if (isNpc(v.trim())) anchorNpcId = v.trim() as NpcId;
+        break;
+      case "money":
+        if (Number.isFinite(n)) moneyCost = cost(n, CAPS.moneyCostMax);
+        break;
+      case "stamina":
+        if (Number.isFinite(n)) staminaCost = cost(n, CAPS.staminaCostMax);
+        break;
+      case "rep":
+        if (Number.isFinite(n)) minReputation = Math.max(-100, Math.min(100, Math.round(n)));
+        break;
+    }
+  }
+  return { anchorNpcId, moneyCost, staminaCost, minReputation };
+}
+
 export function wireToDirectorTurn(wire: Wire): DirectorTurn {
-  const choices: Choice[] = wire.choices.slice(0, 4).map((c, i) => {
-    // Trust gates only make sense as a pair; drop half-formed ones.
-    const gateNpc = isNpc(c.minTrustNpcId) && isGateTier(c.minTrustTier) ? c.minTrustNpcId : "";
-    return {
-      id: CHOICE_IDS[i] ?? "c4",
-      labelZh: c.labelZh,
-      hintZh: c.hintZh,
-      actionTag: c.actionTag,
-      risk: c.risk,
-      anchorNpcId: isNpc(c.anchorNpcId) ? c.anchorNpcId : "",
-      moneyCost: cost(c.moneyCost, CAPS.moneyCostMax),
-      staminaCost: cost(c.staminaCost, CAPS.staminaCostMax),
-      minReputation: Math.max(-100, Math.min(100, Math.round(c.minReputation))),
-      minTrustNpcId: gateNpc,
-      minTrustTier: gateNpc ? (c.minTrustTier as GateTier) : "",
-    };
-  });
+  const choices: Choice[] = wire.choices.slice(0, 4).map((c, i) => ({
+    id: CHOICE_IDS[i] ?? "c4",
+    labelZh: c.labelZh,
+    hintZh: c.hintZh,
+    actionTag: isTag(c.actionTag) ? c.actionTag : "observe_wait",
+    risk: isRisk(c.risk) ? c.risk : "medium",
+    ...parseChoiceExtra(c.extra),
+    // Trust gates are not on the wire (grammar ceiling) — scripted beats only.
+    minTrustNpcId: "",
+    minTrustTier: "",
+  }));
 
   return {
     sceneTitleZh: wire.sceneTitleZh,
@@ -68,10 +110,17 @@ export function wireToDirectorTurn(wire: Wire): DirectorTurn {
       focusNpcIds: wire.directive.focusNpcIds.filter(isNpc),
     },
     choices,
+    // "npcId|台词" strings → validated NpcLine objects.
     npcLines: wire.npcLines
-      .filter((l) => isNpc(l.npcId))
-      .slice(0, CAPS.npcLinesMax)
-      .map((l) => ({ npcId: l.npcId as NpcId, lineZh: l.lineZh })),
+      .map((s) => {
+        const sep = s.indexOf("|");
+        if (sep <= 0) return null;
+        const npcId = s.slice(0, sep).trim();
+        const lineZh = s.slice(sep + 1).trim();
+        return isNpc(npcId) && lineZh ? { npcId: npcId as NpcId, lineZh } : null;
+      })
+      .filter((l): l is { npcId: NpcId; lineZh: string } => l !== null)
+      .slice(0, CAPS.npcLinesMax),
     update: {
       moneyDelta: wire.update.moneyDelta,
       healthDelta: wire.update.healthDelta,
@@ -94,7 +143,7 @@ export function wireToDirectorTurn(wire: Wire): DirectorTurn {
       titleZh: ev.titleZh,
       descZh: ev.descZh,
       importance: intIn(ev.importance, [1, 2, 3] as const, 1),
-      npcIds: ev.npcIds.filter(isNpc),
+      npcIds: splitPacked(ev.npcIds).filter(isNpc),
       locationId: wire.directive.locationId,
     })),
     causalEntries: wire.causalEntries.map((entry) => ({
@@ -104,9 +153,9 @@ export function wireToDirectorTurn(wire: Wire): DirectorTurn {
         ? (entry.cause as "player_action")
         : "player_action",
       textZh: entry.textZh,
-      effectsZh: entry.effectsZh,
-      openedZh: entry.openedZh,
-      closedZh: entry.closedZh,
+      effectsZh: splitPacked(entry.effectsZh),
+      openedZh: splitPacked(entry.openedZh),
+      closedZh: splitPacked(entry.closedZh),
     })),
     isEnding: wire.isEnding,
     endingReasonZh: wire.endingReasonZh,

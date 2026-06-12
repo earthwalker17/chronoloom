@@ -126,6 +126,8 @@ The user-facing experience should include visual structure, state, timeline, ide
 
 A plain text box alone is not enough for the desired product identity.
 
+The interaction surface is the scene itself: the people of the world are visible, approachable and clickable, and talking to them is a bounded, structured act inside the simulation — never an open chat box.
+
 ---
 
 ## 6. Core Difference From the Original Time Travel Test
@@ -715,7 +717,7 @@ Possible visual forms:
 
 A good first visual target:
 
-> A compact, atmospheric scene that changes enough to reflect life progression.
+> A compact, atmospheric scene that changes enough to reflect life progression — and that the player acts THROUGH: characters are figures you can walk up to, click, and talk with, not portraits beside a text panel.
 
 Avoid spending all effort on visuals while neglecting the state loop.
 
