@@ -1,11 +1,16 @@
+import type { EngineId } from "@shared/constants";
+import type { ProviderInfo } from "@shared/types";
+
 interface Props {
-  engine: "claude" | "scripted";
+  providers: ProviderInfo[];
+  selected: EngineId;
+  onSelectProvider: (id: EngineId) => void;
   canResume: boolean;
   onEnter: () => void;
   onResume: () => void;
 }
 
-export function Landing({ engine, canResume, onEnter, onResume }: Props) {
+export function Landing({ providers, selected, onSelectProvider, canResume, onEnter, onResume }: Props) {
   return (
     <div className="screen">
       <div style={{ display: "flex", gap: 28, alignItems: "flex-start" }} className="fade-in">
@@ -29,7 +34,23 @@ export function Landing({ engine, canResume, onEnter, onResume }: Props) {
           </button>
         )}
       </div>
-      {engine === "scripted" && <span className="chip">演示模式 · 离线推演</span>}
+      <div className="provider-row fade-in">
+        <span className="provider-label">执笔者</span>
+        {providers.map((p) => (
+          <button
+            key={p.id}
+            className={`provider-chip${selected === p.id ? " selected" : ""}${p.available ? "" : " unavailable"}`}
+            disabled={!p.available}
+            title={p.available ? (p.model ?? undefined) : "未检测到密钥"}
+            onClick={() => p.available && onSelectProvider(p.id)}
+          >
+            {p.labelZh}
+            {p.id === "claude" && p.available && <span className="provider-tag">荐</span>}
+            {!p.available && <span className="provider-tag dim">未配置</span>}
+          </button>
+        ))}
+      </div>
+      {selected === "scripted" && <span className="chip">演示模式 · 离线推演</span>}
     </div>
   );
 }

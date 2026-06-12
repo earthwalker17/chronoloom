@@ -47,6 +47,11 @@ export interface DioramaHandle {
   setHighlights(npcIds: readonly string[]): void;
   /** Hero plays a talking gesture while set; null stops. */
   setTalking(npcId: string | null): void;
+  /**
+   * Show the protagonist as this identity ("scholar" | "apprentice" |
+   * "interpreter" | "copyist"); null hides them (landing backdrop).
+   */
+  setProtagonist(identityId: string | null): void;
   /** Protagonist turns and walks toward the hero; null = return to idle anchor. */
   protagonistApproach(npcId: string | null): void;
   setRunning(running: boolean): void;
@@ -178,6 +183,7 @@ export function initDiorama(canvas: HTMLCanvasElement): DioramaHandle {
     onPick(_cb) {},
     setHighlights(_npcIds) {},
     setTalking(_npcId) {},
+    setProtagonist(_identityId) {},
     protagonistApproach(_npcId) {},
 
     setRunning,

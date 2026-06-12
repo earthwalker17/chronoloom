@@ -75,6 +75,16 @@ export function renderShareCard(report: LifeReport, identityNameZh: string): str
   ctx.font = '28px "PingFang SC", sans-serif';
   ctx.fillText(`身份 · ${identityNameZh}`, W / 2, dy + 80 + 3 * 70 + 30);
 
+  // 镜中人 decision-style line (wrapped to the card width)
+  ctx.fillStyle = "#5a5248";
+  ctx.font = '26px STKaiti, KaiTi, "Noto Serif CJK SC", serif';
+  const style = report.mirror.decisionStyleZh;
+  const maxChars = 26;
+  const lines = [style.slice(0, maxChars), style.slice(maxChars, maxChars * 2)].filter(Boolean);
+  lines.forEach((line, i) => {
+    ctx.fillText(line, W / 2, dy + 80 + 3 * 70 + 95 + i * 42);
+  });
+
   // seal
   const sx = W - 250;
   const sy = H - 290;

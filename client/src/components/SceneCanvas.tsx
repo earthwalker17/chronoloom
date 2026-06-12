@@ -2,16 +2,29 @@
  * Owns the Three.js diorama behind a ref; React never touches the scene graph.
  * If the 3D layer fails to load (or WebGL is unavailable), degrades to a CSS
  * gradient scene card driven by the same SceneDirective.
+ *
+ * Scene-native interaction flows through props: highlights/talking/approach/
+ * protagonist drive the handle; picks and nameplate projections flow back up.
  */
 import { useEffect, useRef, useState } from "react";
 import type { SceneDirective } from "@shared/types";
-import type { DioramaHandle, NameplatePos } from "../scene";
+import type { DioramaHandle, NameplatePos, SceneHit } from "../scene";
 
 interface Props {
   directive: SceneDirective;
   /** npcId → display name for nameplates. */
   focusNames: Record<string, string>;
   paused?: boolean;
+  /** Identity of the visible player figure; null hides it (landing). */
+  protagonist?: string | null;
+  /** Heroes that glow as interactable (anchored choices). */
+  highlights?: readonly string[];
+  /** Hero currently playing the talking gesture. */
+  talkingNpcId?: string | null;
+  /** Protagonist walk target; bump seq to retrigger the same target. */
+  approach?: { npcId: string | null; seq: number };
+  onPick?: (hit: SceneHit | null) => void;
+  onPlates?: (plates: NameplatePos[]) => void;
 }
 
 const FALLBACK_SKY: Record<SceneDirective["timeOfDay"], string> = {
@@ -21,12 +34,26 @@ const FALLBACK_SKY: Record<SceneDirective["timeOfDay"], string> = {
   night: "linear-gradient(180deg, #121724 0%, #202840 55%, #2d2536 100%)",
 };
 
-export function SceneCanvas({ directive, focusNames, paused = false }: Props) {
+export function SceneCanvas({
+  directive,
+  focusNames,
+  paused = false,
+  protagonist = null,
+  highlights = [],
+  talkingNpcId = null,
+  approach,
+  onPick,
+  onPlates,
+}: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const handleRef = useRef<DioramaHandle | null>(null);
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const [plates, setPlates] = useState<NameplatePos[]>([]);
+  const onPickRef = useRef(onPick);
+  const onPlatesRef = useRef(onPlates);
+  onPickRef.current = onPick;
+  onPlatesRef.current = onPlates;
 
   // Mount the diorama once.
   useEffect(() => {
@@ -38,7 +65,11 @@ export function SceneCanvas({ directive, focusNames, paused = false }: Props) {
         if (disposed) return;
         const handle = initDiorama(canvas);
         handleRef.current = handle;
-        handle.onNameplates(setPlates);
+        handle.onNameplates((p) => {
+          setPlates(p);
+          onPlatesRef.current?.(p);
+        });
+        handle.onPick((hit) => onPickRef.current?.(hit));
         const parent = canvas.parentElement;
         if (parent) handle.resize(parent.clientWidth, parent.clientHeight);
         setReady(true);
@@ -54,10 +85,26 @@ export function SceneCanvas({ directive, focusNames, paused = false }: Props) {
     };
   }, []);
 
-  // Drive directives + pause state + resize.
+  // Drive directives + interaction channels + pause state + resize.
   useEffect(() => {
     if (ready) handleRef.current?.applyDirective(directive);
   }, [ready, directive]);
+
+  useEffect(() => {
+    if (ready) handleRef.current?.setProtagonist(protagonist);
+  }, [ready, protagonist]);
+
+  useEffect(() => {
+    if (ready) handleRef.current?.setHighlights(highlights);
+  }, [ready, highlights]);
+
+  useEffect(() => {
+    if (ready) handleRef.current?.setTalking(talkingNpcId);
+  }, [ready, talkingNpcId]);
+
+  useEffect(() => {
+    if (ready && approach) handleRef.current?.protagonistApproach(approach.npcId);
+  }, [ready, approach]);
 
   useEffect(() => {
     if (ready) handleRef.current?.setRunning(!paused && !document.hidden);

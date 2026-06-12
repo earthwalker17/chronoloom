@@ -31,7 +31,11 @@ function ok(cond: boolean, label: string): void {
 
 const config: AppConfig = {
   apiKey: undefined,
+  openaiKey: undefined,
+  deepseekKey: undefined,
   model: "claude-opus-4-8",
+  openaiModel: "gpt-5.1",
+  deepseekModel: "deepseek-chat",
   engine: "scripted",
   fallbackToScripted: false,
   port: 0,
@@ -140,7 +144,56 @@ async function playLife(app: Hono, store: SessionStore, lean: Lean): Promise<{ v
   const repRes2 = await post(app, `/api/sessions/${view.id}/report`, {});
   ok(stringifySorted(await json(repRes2)) === stringifySorted({ report }), "report is idempotent");
 
+  // 镜中人 — the real-player reflection is present and evidence-grounded.
+  ok(report.mirror.themes.length >= 1 && report.mirror.themes.length <= 3, "mirror has 1-3 themes");
+  ok(report.mirror.decisionStyleZh.length > 0, "mirror names a decision style");
+  ok(report.mirror.blessingZh.length > 0, "mirror closes with a blessing");
+  ok((report.mirror.themes[0]?.evidenceZh.length ?? 0) > 0, "mirror themes carry evidence");
+
   return { view, report };
+}
+
+/** 攀谈 flow + locked-choice enforcement on fresh lives. */
+async function sceneNativeChecks(app: Hono, store: SessionStore): Promise<void> {
+  // -- talk flow --
+  let v = await json<SessionView>(await post(app, "/api/sessions", { identityId: "interpreter" }));
+  while (v.scene.directive.focusNpcIds.length === 0 && !v.finished) {
+    const c = v.scene.choices.find((ch) => viewAffordable(v, ch));
+    if (!c) throw new Error("no affordable choice");
+    v = await json<SessionView>(await post(app, `/api/sessions/${v.id}/turn`, { choiceId: c.id, turn: v.turn }));
+  }
+  const npcId = v.scene.directive.focusNpcIds[0];
+  if (!npcId) throw new Error("no focus npc");
+  ok(
+    v.npcs.find((n) => n.id === npcId)?.canTalk === true,
+    "focus NPC is talkable in the view",
+  );
+  const talkRes = await post(app, `/api/sessions/${v.id}/talk`, { npcId, turn: v.turn });
+  ok(talkRes.status === 200, "talk to a focus NPC → 200");
+  const talk = await json<{ lines: { lineZh: string }[]; attitude: string }>(talkRes);
+  ok(talk.lines.length >= 1 && (talk.lines[0]?.lineZh.length ?? 0) > 0, "talk returns spoken lines");
+  const afterTalk = await json<SessionView>(await app.request(`/api/sessions/${v.id}`));
+  ok(afterTalk.npcs.find((n) => n.id === npcId)?.canTalk === false, "talked NPC is fenced for this turn");
+  const talkAgain = await post(app, `/api/sessions/${v.id}/talk`, { npcId, turn: v.turn });
+  ok(talkAgain.status === 422, "second talk same turn → 422");
+  ok(v.scene.npcLines.every((l) => v.scene.directive.focusNpcIds.includes(l.npcId)), "scene npcLines only from focus NPCs");
+
+  // -- locked choice enforcement --
+  let w = await json<SessionView>(await post(app, "/api/sessions", { identityId: "scholar" }));
+  const priced = w.scene.choices.find((c) => c.moneyCost > 0);
+  ok(priced !== undefined, "arrival offers at least one priced choice");
+  const drained = await store.load(w.id);
+  if (!drained || !priced) throw new Error("state missing");
+  drained.player.money = 0;
+  await store.save(drained);
+  const lockedRes = await post(app, `/api/sessions/${w.id}/turn`, { choiceId: priced.id, turn: w.turn });
+  ok(lockedRes.status === 422, "picking an unaffordable choice → 422 choice_locked");
+  const lockedBody = await json<{ error: { code: string } }>(lockedRes);
+  ok(lockedBody.error.code === "choice_locked", "locked choice error code is choice_locked");
+  const freeChoice = w.scene.choices.find((c) => c.moneyCost === 0 && c.staminaCost === 0);
+  if (!freeChoice) throw new Error("no free choice");
+  const freeRes = await post(app, `/api/sessions/${w.id}/turn`, { choiceId: freeChoice.id, turn: w.turn });
+  ok(freeRes.status === 200, "free choice still passes after the lock");
 }
 
 async function main() {
@@ -165,6 +218,9 @@ async function main() {
 
   console.log("— life B: money-leaning scholar —");
   const b = await playLife(app, store, "money");
+
+  console.log("— scene-native: 攀谈 + locked choices —");
+  await sceneNativeChecks(app, store);
 
   console.log("— divergence: choices change the life path —");
   const stateA = await store.load(a.view.id);

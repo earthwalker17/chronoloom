@@ -13,9 +13,10 @@ export interface SelectedDirectors {
 }
 
 /**
- * Engine selection: explicit CHRONOLOOM_ENGINE wins; otherwise claude when a
- * key is present, scripted when not. Model SDK modules are imported lazily so
- * offline play never touches them.
+ * Engine selection: explicit CHRONOLOOM_ENGINE wins; otherwise the best
+ * available key (claude > openai > deepseek), scripted as the floor. Every
+ * keyed provider goes into the map — players pick per session on the landing
+ * page. Model SDK modules are imported lazily so offline play never loads them.
  */
 export async function selectDirectors(config: AppConfig): Promise<SelectedDirectors> {
   const scripted = new ScriptedDirector();
@@ -24,6 +25,39 @@ export async function selectDirectors(config: AppConfig): Promise<SelectedDirect
   if (config.apiKey) {
     const { ClaudeDirector } = await import("./claudeDirector");
     directors.set("claude", new ClaudeDirector(config));
+  }
+  if (config.openaiKey || config.deepseekKey) {
+    const { ModelDirector } = await import("./modelDirector");
+    const { OpenAICompatClient } = await import("./providers/openaiCompatClient");
+    if (config.openaiKey) {
+      directors.set(
+        "openai",
+        new ModelDirector(
+          "openai",
+          new OpenAICompatClient({
+            id: "openai",
+            apiKey: config.openaiKey,
+            model: config.openaiModel,
+            schemaMode: "json_schema",
+          }),
+        ),
+      );
+    }
+    if (config.deepseekKey) {
+      directors.set(
+        "deepseek",
+        new ModelDirector(
+          "deepseek",
+          new OpenAICompatClient({
+            id: "deepseek",
+            apiKey: config.deepseekKey,
+            model: config.deepseekModel,
+            baseURL: "https://api.deepseek.com",
+            schemaMode: "json_object",
+          }),
+        ),
+      );
+    }
   }
 
   const defaultEngine: EngineId = directors.has(config.engine) ? config.engine : "scripted";

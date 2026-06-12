@@ -1,10 +1,12 @@
 /**
  * Grounding guard: a life report may only claim what was actually lived.
  * Turning points must cite real timeline ids; value chips must correspond to
- * tendencies the player actually expressed. Ungrounded claims are deleted.
+ * tendencies the player actually expressed; mirror themes must carry real
+ * evidence. Ungrounded claims are deleted (or rebuilt from the lived record).
  */
 import { ACTION_TAGS, ACTION_TAG_VALUES_ZH, CAPS } from "@shared/constants";
 import type { LifeReport, SessionState } from "@shared/types";
+import { buildScriptedMirror } from "../content/reportTemplates";
 
 export function guardReport(report: LifeReport, state: SessionState): { report: LifeReport; log: string[] } {
   const log: string[] = [];
@@ -53,6 +55,24 @@ export function guardReport(report: LifeReport, state: SessionState): { report: 
     r.shareCard.statHighlightsZh.push(`七日 · ${state.timeline.length} 件大事记入浮生簿`);
   }
   r.shareCard.statHighlightsZh = r.shareCard.statHighlightsZh.slice(0, 3);
+
+  // --- 镜中人: themes need evidence; a hollow mirror is rebuilt, not shown ---
+  const beforeThemes = r.mirror.themes.length;
+  r.mirror.themes = r.mirror.themes
+    .filter((t) => t.evidenceZh.trim() !== "" && t.observationZh.trim() !== "")
+    .slice(0, CAPS.mirrorThemesMax);
+  if (r.mirror.themes.length < beforeThemes) {
+    log.push(`report: ${beforeThemes - r.mirror.themes.length} evidence-free mirror theme(s) dropped`);
+  }
+  const mirrorHollow =
+    r.mirror.themes.length === 0 ||
+    r.mirror.decisionStyleZh.trim() === "" ||
+    r.mirror.gentleAdviceZh.trim() === "" ||
+    r.mirror.blessingZh.trim() === "";
+  if (mirrorHollow) {
+    r.mirror = buildScriptedMirror(state);
+    log.push("report: mirror was hollow — rebuilt from the lived record");
+  }
 
   return { report: r, log };
 }

@@ -26,7 +26,9 @@ export function metaRoutes(deps: MetaDeps): Hono {
   const modelFor = (id: EngineId): string | null => {
     if (!directors.has(id)) return null;
     if (id === "claude") return config.model;
-    return null; // scripted has no model; openai/deepseek filled in by the provider layer
+    if (id === "openai") return config.openaiModel;
+    if (id === "deepseek") return config.deepseekModel;
+    return null; // scripted has no model
   };
 
   app.get("/health", (c) => {

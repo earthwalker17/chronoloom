@@ -142,6 +142,55 @@ button {
   color: var(--paper-deep);
 }
 
+/* landing provider selector (执笔者) */
+.provider-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+.provider-label {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  color: var(--paper-deep);
+  opacity: 0.8;
+}
+.provider-chip {
+  font-family: var(--font-ui);
+  font-size: 12.5px;
+  letter-spacing: 0.08em;
+  padding: 5px 12px;
+  border-radius: 2px;
+  border: 1px solid rgba(242, 234, 216, 0.35);
+  background: rgba(20, 16, 14, 0.45);
+  color: var(--paper-deep);
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+.provider-chip:hover:not(:disabled) {
+  border-color: rgba(242, 234, 216, 0.7);
+  color: var(--paper);
+}
+.provider-chip.selected {
+  border-color: var(--cinnabar-bright);
+  color: var(--paper);
+  background: rgba(162, 62, 46, 0.28);
+}
+.provider-chip.unavailable {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.provider-tag {
+  margin-left: 6px;
+  font-size: 10px;
+  color: var(--cinnabar-bright);
+}
+.provider-tag.dim {
+  color: var(--paper-deep);
+  opacity: 0.8;
+}
+
 /* paper scroll card (era intro etc.) */
 .scroll-card {
   max-width: 560px;
